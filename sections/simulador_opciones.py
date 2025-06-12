@@ -6,7 +6,11 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 
 from utils.data_io import cargar_historial
-from utils.options import payoff_call, payoff_put, calc_delta
+from utils.options import (
+    calcular_payoff_call as payoff_call,
+    calcular_payoff_put  as payoff_put,
+    calcular_delta_call_put as calc_delta
+)
 
 def simulador_opciones():
     st.subheader("📈 Simulador de Opciones con Perfil de Riesgo")
