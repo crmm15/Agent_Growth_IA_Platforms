@@ -20,6 +20,8 @@ from utils.market_data import cargar_precio_historico
 from utils.options import payoff_call, payoff_put, calc_delta
 from strategies.darvas import calc_mavilimw, calc_wae, robust_trend_filter
 
+from sections.simulador_opciones import simulador_opciones
+
 # 1) Configuración de la página
 st.set_page_config(page_title="Agent GrowthIA M&M", layout="wide")
 
