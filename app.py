@@ -1,10 +1,11 @@
 # app.py
 import streamlit as st
+from pathlib import Path
+
 import pandas as pd
 import numpy as np
 import datetime
 import yfinance as yf
-from pathlib import Path
 
 from config import ARCHIVO_LOG
 from utils.data_io import cargar_historial, guardar_historial
@@ -14,9 +15,10 @@ from utils.market_data import cargar_precio_historico
 from utils.options import payoff_call, payoff_put, calc_delta
 from strategies.darvas import calc_mavilimw, calc_wae, robust_trend_filter
 
+# 1) Configuración de la página
 st.set_page_config(page_title="Agent GrowthIA M&M", layout="wide")
 
-# ——— Menú lateral ———
+# 2) Menú lateral
 seccion = st.sidebar.radio(
     "📂 Elegí una sección",
     [
@@ -28,7 +30,7 @@ seccion = st.sidebar.radio(
     ]
 )
 
-# ——— Sección Inicio ———
+# 3) Renderizado de secciones
 if seccion == "Inicio":
     st.title("🚀 Bienvenido a GrowthIA M&M")
     md_path = Path(__file__).parent / "prompts" / "prompt_inicial.md"
@@ -39,15 +41,14 @@ if seccion == "Inicio":
         st.info("No se encontró el archivo prompt_inicial.md")
     st.markdown("---")
 
-# ——— Otras secciones ———
 elif seccion == "Gestor de Portafolio":
-    gestor_portfolio()
+    gestor_portfolio()      # tu función importada
 
 elif seccion == "Simulador de Opciones":
-    simulador_opciones()
+    simulador_opciones()   # tu función importada
 
 elif seccion == "Dashboard de Desempeño":
-    dashboard()
+    dashboard()             # tu función importada
 
 elif seccion == "Backtesting Darvas":
-    backtest_darvas()
+    backtest_darvas()       # tu función importada
