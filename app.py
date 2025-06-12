@@ -19,6 +19,18 @@ st.set_page_config(page_title="Agent GrowthIA M&M", layout="wide")
 # Aquí irían funciones por sección: gestor_portfolio(), simulador_opciones(), dashboard(), backtest_darvas()
 # Cada función separa lógica de UI y usa utilitarios importados.
 
+if seccion == "Inicio":
+    st.title("🚀 Bienvenido a GrowthIA M&M")
+    # Ruta al .md
+    md_path = Path(__file__).parent / "prompts" / "prompt_inicial.md"
+    if md_path.exists():
+        contenido = md_path.read_text(encoding="utf-8")
+        st.markdown(contenido)
+    else:
+        st.info("No se encontró el archivo prompt_inicial.md")
+    st.markdown("---")
+
+
 if __name__ == "__main__":
     seccion = st.sidebar.radio(...)
     if seccion == "Gestor de Portafolio":
