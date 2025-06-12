@@ -1,10 +1,10 @@
 # app.py (estructura resumida)
-```python
 import streamlit as st
 import pandas as pd
 import numpy as np
 import datetime
 import yfinance as yf
+from pathlib import Path
 
 from config import ARCHIVO_LOG
 from utils.data_io import cargar_historial, guardar_historial
