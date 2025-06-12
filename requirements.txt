@@ -2,6 +2,6 @@ streamlit
 pandas
 numpy
 yfinance
-scipy
 matplotlib
-requests
+openpyxl
+scipy>=1.10.0
