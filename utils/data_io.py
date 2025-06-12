@@ -4,13 +4,19 @@ from config import ARCHIVO_LOG
 
 @st.cache_data(show_spinner=False)
 def cargar_historial() -> pd.DataFrame:
-    """Carga el CSV de historial o crea DataFrame vacío si no existe."""
+    """
+    Carga el CSV de historial o crea DataFrame vacío con columnas si no existe
+    o si está vacío.
+    """
     if ARCHIVO_LOG.exists():
-        return pd.read_csv(ARCHIVO_LOG)
-    return pd.DataFrame(columns=["Fecha", "Ticker", "Acción Tomada", "Rentabilidad %"])
-
-
-def guardar_historial(df: pd.DataFrame):
-    """Guarda el historial y refresca la caché."""
-    df.to_csv(ARCHIVO_LOG, index=False)
-    st.cache_data.clear()
+        try:
+            return pd.read_csv(ARCHIVO_LOG)
+        except pd.errors.EmptyDataError:
+            # El archivo existe pero no tiene datos
+            return pd.DataFrame(
+                columns=["Fecha", "Ticker", "Acción Tomada", "Rentabilidad %"]
+            )
+    # No existe el archivo
+    return pd.DataFrame(
+        columns=["Fecha", "Ticker", "Acción Tomada", "Rentabilidad %"]
+    )
