@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 
+
 def wma(series: pd.Series, length: int) -> pd.Series:
     """
     Weighted Moving Average (WMA) implementation matching TradingView's wma().
@@ -11,6 +12,7 @@ def wma(series: pd.Series, length: int) -> pd.Series:
     denom = weights.sum()
     # Apply rolling WMA
     return series.rolling(length).apply(lambda x: np.dot(x, weights) / denom, raw=True)
+
 
 def calc_mavilimw(df: pd.DataFrame, fmal: int = 3, smal: int = 5) -> pd.Series:
     """
@@ -31,6 +33,7 @@ def calc_mavilimw(df: pd.DataFrame, fmal: int = 3, smal: int = 5) -> pd.Series:
     MAVW = wma(M5, Smal)
 
     return MAVW
+
 
 def calc_wae(df: pd.DataFrame, sensitivity: float = 150, fastLength: int = 20,
              slowLength: int = 40, channelLength: int = 20, mult: float = 2.0) -> pd.DataFrame:
