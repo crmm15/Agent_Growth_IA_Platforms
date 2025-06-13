@@ -46,23 +46,23 @@ def gestor_portfolio():
             col1, col2 = st.columns(2)
             with col1:
                 if st.button(f"✅ Ejecutar PUT {ticker}", key=f"put_{ticker}"):
-                    registrar_accion(ticker, "Comprar PUT", {rentab*100:.2f})
+                    registrar_accion(ticker, "Comprar PUT", rentab)
                     st.success(f"✔ Acción registrada para {ticker}")
             with col2:
                 if st.button(f"❌ Ignorar {ticker}", key=f"ign_{ticker}"):
-                    registrar_accion(ticker, "Ignorado", {rentab*100:.2f})
+                    registrar_accion(ticker, "Ignorado", rentab)
                     st.info(f"🔕 Ignorado para {ticker}")
 
         elif rentab > 0.08:
             st.write("🔄 Recomendación: Mantener posición.")
             if st.button(f"✅ Mantener {ticker}", key=f"mant_{ticker}"):
-                registrar_accion(ticker, "Mantener", {rentab*100:.2f})
+                registrar_accion(ticker, "Mantener", rentab)
                 st.success(f"✔ Acción registrada para {ticker}")
 
         else:
             st.write("📉 Recomendación: Revisar, baja rentabilidad.")
             if st.button(f"📋 Revisar {ticker}", key=f"rev_{ticker}"):
-                registrar_accion(ticker, "Revisión Manual", {rentab*100:.2f})
+                registrar_accion(ticker, "Revisión Manual", rentab)
                 st.info(f"🔍 Acción registrada para {ticker}")
 
     st.markdown("---")
