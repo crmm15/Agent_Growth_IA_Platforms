@@ -110,60 +110,60 @@ def simulador_opciones():
         if rol == "Vendedor":
             break_even = strike_price - premium if tipo_opcion == "CALL" else strike_price + premium
 
-    fig, ax = plt.subplots(figsize=(5, 3))
-    ax.xaxis.set_major_formatter(mtick.StrMethodFormatter('${x:,.0f}'))
-    ax.yaxis.set_major_formatter(mtick.StrMethodFormatter('${x:,.0f}'))
-    ax.set_xlabel("Precio del activo al vencimiento (USD)")
-    ax.set_ylabel("Resultado neto (USD)")
-    ax.plot(S, payoff, label=f"Payoff ({rol})")
-    ax.axhline(0, color="gray", linestyle="--")
-    ax.axvline(strike_price, color="red", linestyle="--", label="Strike")
-    ax.axvline(break_even, color="green", linestyle="--", label="Break-even")
-    ax.set_title(f"{tipo_opcion} - {selected_ticker} ({nivel_riesgo})")
-    ax.legend()
-    st.pyplot(fig)
+        fig, ax = plt.subplots(figsize=(5, 3))
+        ax.xaxis.set_major_formatter(mtick.StrMethodFormatter('${x:,.0f}'))
+        ax.yaxis.set_major_formatter(mtick.StrMethodFormatter('${x:,.0f}'))
+        ax.set_xlabel("Precio del activo al vencimiento (USD)")
+        ax.set_ylabel("Resultado neto (USD)")
+        ax.plot(S, payoff, label=f"Payoff ({rol})")
+        ax.axhline(0, color="gray", linestyle="--")
+        ax.axvline(strike_price, color="red", linestyle="--", label="Strike")
+        ax.axvline(break_even, color="green", linestyle="--", label="Break-even")
+        ax.set_title(f"{tipo_opcion} - {selected_ticker} ({nivel_riesgo})")
+        ax.legend()
+        st.pyplot(fig)
 
-   with st.expander("ℹ️ Interpretación del gráfico"):
-    if rol == "Comprador" and tipo_opcion == "CALL":
-        st.markdown(f"🎯 Comprás el derecho a comprar la acción a {strike_price:.2f} pagando una prima de {premium:.2f}")
-        st.markdown("📉 Si el precio final está por debajo del strike, no ejercés y pierdes solo la prima")
-        st.markdown(f"📈 Si el precio sube por encima de {break_even:.2f}, tienes ganancias netas")
-        st.markdown("⚖️ El gráfico muestra tu rentabilidad según el precio al vencimiento")
-
-    elif rol == "Comprador" and tipo_opcion == "PUT":
-        st.markdown(f"🎯 Comprás el derecho a vender la acción a {strike_price:.2f} pagando una prima de {premium:.2f}")
-        st.markdown(f"📈 Ganás si la acción baja por debajo de {break_even:.2f}")
-        st.markdown("📉 Si se mantiene por encima del strike, la pérdida se limita a la prima")
-        st.markdown("⚖️ El gráfico refleja tu cobertura o especulación a la baja.")
-
-    elif rol == "Vendedor" and tipo_opcion == "CALL":
-        st.markdown(f"💰 Vendés la opción y recibes {premium:.2f} de prima, pero asumes la obligación de vender a {strike_price:.2f}")
-        st.markdown("✅ Si la acción cierra por debajo del strike, ganás toda la prima")
-        st.markdown(f"⚠️ Si sube por encima de {break_even:.2f}, comenzás a perder dinero")
-        st.markdown("📉 Riesgo ilimitado si el precio sube mucho (al menos que tengas las acciones)")
-
-    elif rol == "Vendedor" and tipo_opcion == "PUT":
-        st.markdown(f"💰 Vendés la opción y te pagan {premium:.2f} por asumir la obligación de comprar a {strike_price:.2f}")
-        st.markdown("✅ Ganás la prima si el precio se mantiene por encima del strike")
-        st.markdown(f"⚠️ Si cae por debajo de {break_even:.2f}, comenzás a perder dinero")
-        st.markdown("📉 Riesgo limitado: como máximo hasta que la acción llegue a $0")
-
-    with st.expander("📘 Perfil del rol seleccionado"):
-        if rol == "Comprador":
-            st.markdown(f"💸 Pagás una prima {premium:.2f} por el derecho a ejercer")
-            st.markdown("📈 Ganancia potencial ilimitada (CALL) o limitada (PUT)")
-            st.markdown("🔻 Pérdida máxima: la prima")
-        else:
-            if tipo_opcion == "CALL":
-                st.markdown(f"💵 Recibes una prima {premium:.2f} por asumir la obligación de vender a {strike_price:.2f}")
-                st.markdown("✅ Ganancia máxima: la prima si la acción no supera el strike")
-                st.markdown(f"⚠️ Si el precio sube por encima de {break_even:.2f}, comenzás a tener pérdidas. Estas son potencialmente ilimitadas")
-                st.markdown("🔒 Estrategia útil para generar ingresos si creés que la acción no superará el strike")
+       with st.expander("ℹ️ Interpretación del gráfico"):
+        if rol == "Comprador" and tipo_opcion == "CALL":
+            st.markdown(f"🎯 Comprás el derecho a comprar la acción a {strike_price:.2f} pagando una prima de {premium:.2f}")
+            st.markdown("📉 Si el precio final está por debajo del strike, no ejercés y pierdes solo la prima")
+            st.markdown(f"📈 Si el precio sube por encima de {break_even:.2f}, tienes ganancias netas")
+            st.markdown("⚖️ El gráfico muestra tu rentabilidad según el precio al vencimiento")
+    
+        elif rol == "Comprador" and tipo_opcion == "PUT":
+            st.markdown(f"🎯 Comprás el derecho a vender la acción a {strike_price:.2f} pagando una prima de {premium:.2f}")
+            st.markdown(f"📈 Ganás si la acción baja por debajo de {break_even:.2f}")
+            st.markdown("📉 Si se mantiene por encima del strike, la pérdida se limita a la prima")
+            st.markdown("⚖️ El gráfico refleja tu cobertura o especulación a la baja.")
+    
+        elif rol == "Vendedor" and tipo_opcion == "CALL":
+            st.markdown(f"💰 Vendés la opción y recibes {premium:.2f} de prima, pero asumes la obligación de vender a {strike_price:.2f}")
+            st.markdown("✅ Si la acción cierra por debajo del strike, ganás toda la prima")
+            st.markdown(f"⚠️ Si sube por encima de {break_even:.2f}, comenzás a perder dinero")
+            st.markdown("📉 Riesgo ilimitado si el precio sube mucho (al menos que tengas las acciones)")
+    
+        elif rol == "Vendedor" and tipo_opcion == "PUT":
+            st.markdown(f"💰 Vendés la opción y te pagan {premium:.2f} por asumir la obligación de comprar a {strike_price:.2f}")
+            st.markdown("✅ Ganás la prima si el precio se mantiene por encima del strike")
+            st.markdown(f"⚠️ Si cae por debajo de {break_even:.2f}, comenzás a perder dinero")
+            st.markdown("📉 Riesgo limitado: como máximo hasta que la acción llegue a $0")
+    
+        with st.expander("📘 Perfil del rol seleccionado"):
+            if rol == "Comprador":
+                st.markdown(f"💸 Pagás una prima {premium:.2f} por el derecho a ejercer")
+                st.markdown("📈 Ganancia potencial ilimitada (CALL) o limitada (PUT)")
+                st.markdown("🔻 Pérdida máxima: la prima")
             else:
-                st.markdown(f"💵 Recibes una prima {premium:.2f} por asumir la obligación de comprar a {strike_price:.2f}")
-                st.markdown("✅ Ganancia máxima: la prima si la acción se mantiene por encima del strike.")
-                st.markdown(f"⚠️ Si la acción cae por debajo de {break_even:.2f}, empiezás a tener pérdidas. El riesgo es alto, pero finito (hasta que la acción llegue a $0)")
-                st.markdown("🛡 Estrategia usada si estás dispuesto a comprar la acción más barata que hoy")
+                if tipo_opcion == "CALL":
+                    st.markdown(f"💵 Recibes una prima {premium:.2f} por asumir la obligación de vender a {strike_price:.2f}")
+                    st.markdown("✅ Ganancia máxima: la prima si la acción no supera el strike")
+                    st.markdown(f"⚠️ Si el precio sube por encima de {break_even:.2f}, comenzás a tener pérdidas. Estas son potencialmente ilimitadas")
+                    st.markdown("🔒 Estrategia útil para generar ingresos si creés que la acción no superará el strike")
+                else:
+                    st.markdown(f"💵 Recibes una prima {premium:.2f} por asumir la obligación de comprar a {strike_price:.2f}")
+                    st.markdown("✅ Ganancia máxima: la prima si la acción se mantiene por encima del strike.")
+                    st.markdown(f"⚠️ Si la acción cae por debajo de {break_even:.2f}, empiezás a tener pérdidas. El riesgo es alto, pero finito (hasta que la acción llegue a $0)")
+                    st.markdown("🛡 Estrategia usada si estás dispuesto a comprar la acción más barata que hoy")
 
     # 13) Envío a Telegram
     if st.button("📤 Enviar simulación a Telegram", key="simu_telegram"):
