@@ -123,12 +123,12 @@ def simulador_opciones():
         ax.legend()
         st.pyplot(fig)
 
-       with st.expander("ℹ️ Interpretación del gráfico"):
-        if rol == "Comprador" and tipo_opcion == "CALL":
-            st.markdown(f"🎯 Comprás el derecho a comprar la acción a {strike_price:.2f} pagando una prima de {premium:.2f}")
-            st.markdown("📉 Si el precio final está por debajo del strike, no ejercés y pierdes solo la prima")
-            st.markdown(f"📈 Si el precio sube por encima de {break_even:.2f}, tienes ganancias netas")
-            st.markdown("⚖️ El gráfico muestra tu rentabilidad según el precio al vencimiento")
+        with st.expander("ℹ️ Interpretación del gráfico"):
+            if rol == "Comprador" and tipo_opcion == "CALL":
+                st.markdown(f"🎯 Comprás el derecho a comprar la acción a {strike_price:.2f} pagando una prima de {premium:.2f}")
+                st.markdown("📉 Si el precio final está por debajo del strike, no ejercés y pierdes solo la prima")
+                st.markdown(f"📈 Si el precio sube por encima de {break_even:.2f}, tienes ganancias netas")
+                st.markdown("⚖️ El gráfico muestra tu rentabilidad según el precio al vencimiento")
     
         elif rol == "Comprador" and tipo_opcion == "PUT":
             st.markdown(f"🎯 Comprás el derecho a vender la acción a {strike_price:.2f} pagando una prima de {premium:.2f}")
