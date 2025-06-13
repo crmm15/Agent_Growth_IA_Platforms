@@ -17,7 +17,7 @@ def backtest_darvas():
     activos_predef = {
         "BTC/USD": "BTC-USD",
         "ETH/USD": "ETH-USD",
-        # Puedes agregar más activos aquí
+        # Agrega más activos si lo deseas
     }
 
     # 1) Selección de activo, temporalidad y rango de fechas
@@ -29,8 +29,13 @@ def backtest_darvas():
     # 2) Ejecutar backtest
     if st.button("Ejecutar Backtest Darvas"):
         st.info("Descargando datos históricos...")
-        # Carga datos usando sólo ticker e intervalo
+        # Carga datos usando ticker e intervalo
         df = cargar_precio_historico(activos_predef[activo_nombre], timeframe)
+
+        # Remover zona horaria para evitar discrepancia tz-aware vs tz-naive
+        if hasattr(df.index, 'tz') and df.index.tz is not None:
+            df.index = df.index.tz_localize(None)
+
         # Filtrado por rango de fechas (índice datetime)
         df = df.loc[start:end]
         st.success(f"Datos descargados: {len(df)} filas")
