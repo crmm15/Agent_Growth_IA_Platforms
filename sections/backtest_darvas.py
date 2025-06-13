@@ -27,7 +27,7 @@ def backtest_darvas():
 
     # <<< ESTE ES EL CAMBIO >>> 
     DARVAS_WINDOW = st.number_input(
-        "📦 Largo del Darvas Box (boxp)",
+        "Largo del Darvas Box (boxp)",
         min_value=1, max_value=100, value=5, step=1,
         help="Número de barras para máximos/mínimos de Darvas (en TradingView usan 5)"
     )
