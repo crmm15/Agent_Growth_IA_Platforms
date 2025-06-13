@@ -27,7 +27,7 @@ def backtest_darvas():
     start = st.date_input("Desde",  value=pd.to_datetime("2023-01-01"))
     end   = st.date_input("Hasta",  value=pd.to_datetime("today"))
 
-    boxp = st.slider("Largo del Darvas Box (boxp)", min_value=2, max_value=50, value=20)
+    boxp = st.slider("Largo del Darvas Box (boxp)", min_value=2, max_value=50, value=5)
 
     if not st.button("Ejecutar Backtest Darvas"):
         return
