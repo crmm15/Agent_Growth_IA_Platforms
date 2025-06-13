@@ -11,13 +11,13 @@ from utils.backtest_helpers import robust_trend_filter
 def backtest_darvas():
     st.header("📦 Backtesting Estrategia Darvas Box")
 
-    # Parámetros fijos
+    # Parámetros fijos de Darvas
     DARVAS_WINDOW = 20
 
     activos_predef = {
         "BTC/USD": "BTC-USD",
         "ETH/USD": "ETH-USD",
-        # Agrega más si lo necesitas
+        # Puedes agregar más activos aquí
     }
 
     # 1) Selección de activo, temporalidad y rango de fechas
@@ -26,21 +26,24 @@ def backtest_darvas():
     start         = st.date_input("Desde", value=pd.to_datetime("2023-01-01"))
     end           = st.date_input("Hasta", value=pd.to_datetime("today"))
 
-    # 2) Botón de ejecución
+    # 2) Ejecutar backtest
     if st.button("Ejecutar Backtest Darvas"):
         st.info("Descargando datos históricos...")
-        df = cargar_precio_historico(activos_predef[activo_nombre], timeframe, start, end)
+        # Carga datos usando sólo ticker e intervalo
+        df = cargar_precio_historico(activos_predef[activo_nombre], timeframe)
+        # Filtrado por rango de fechas (índice datetime)
+        df = df.loc[start:end]
         st.success(f"Datos descargados: {len(df)} filas")
 
         # 3) Cálculo de señales Darvas
-        df['prev_close']   = df['Close'].shift(1)
-        df['darvas_high']  = df['High'].rolling(DARVAS_WINDOW).max()
-        df['darvas_low']   = df['Low'].rolling(DARVAS_WINDOW).min()
-        df['buy_signal']   = (
+        df['prev_close'] = df['Close'].shift(1)
+        df['darvas_high'] = df['High'].rolling(DARVAS_WINDOW).max()
+        df['darvas_low']  = df['Low'].rolling(DARVAS_WINDOW).min()
+        df['buy_signal']  = (
             (df['Close'] > df['darvas_high'].shift(1)) &
             (df['prev_close'] <= df['darvas_high'].shift(1))
         )
-        df['sell_signal']  = (
+        df['sell_signal'] = (
             (df['Close'] < df['darvas_low'].shift(1)) &
             (df['prev_close'] >= df['darvas_low'].shift(1))
         )
@@ -57,7 +60,7 @@ def backtest_darvas():
         # 5) Señal final compuesta
         df['buy_final'] = df['buy_signal'] & df['trend_filter'] & df['wae_filter']
 
-        # 6) Presentación de la tabla de señales
+        # 6) Mostrar tabla de señales
         cols = [
             'Close','darvas_high','darvas_low','mavilimw',
             'wae_trendUp','wae_e1','wae_deadzone',
