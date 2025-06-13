@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import yfinance as yf
 
 from utils.indicators import calc_mavilimw, calc_wae
-from utils.backtest_helpers import run_darvas_backtest, robust_trend_filter
+from utils.backtest_helpers import robust_trend_filter
 
 def backtest_darvas():
     seccion == "Backtesting Darvas"  # placeholder
