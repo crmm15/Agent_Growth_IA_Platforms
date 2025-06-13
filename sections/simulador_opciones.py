@@ -16,120 +16,154 @@ from utils.options import (
 def simulador_opciones():
     st.subheader("📈 Simulador de Opciones con Perfil de Riesgo")
 
-    # 1) Subir Excel con la hoja "Inversiones"
-    archivo = st.sidebar.file_uploader(
-        "📁 Subí tu archivo Excel (.xlsx)",
-        type=["xlsx"],
-        key="simulador"
-    )
-    if archivo is None:
-        st.info("Subí el archivo Excel para empezar.")
-        return
-
-    # 2) Leer hoja y limpiar nombres de columnas
-    df = pd.read_excel(archivo, sheet_name="Inversiones")
-    df.columns = df.columns.str.strip()
-    st.write("Columnas disponibles:", df.columns.tolist())
-
-    # 3) Validar que exista la columna Ticker
-    if "Ticker" not in df.columns:
-        st.error("El archivo debe contener la columna 'Ticker'.")
-        return
-
-    # 4) Selección de ticker y extracción de fila
-    tickers = df["Ticker"].dropna().unique()
-    selected_ticker = st.selectbox("Seleccioná un ticker", tickers)
-    datos = df[df["Ticker"] == selected_ticker].iloc[0]
-
-    # 5) Precio actual (columna o fallback a yfinance)
-    if "Precio Actual" in df.columns:
-        precio_actual = datos["Precio Actual"]
-    else:
-        hist = cargar_precio_historico(selected_ticker, period="1d")
-        precio_actual = hist["Close"].iloc[-1]
-    st.markdown(f"**Precio actual usado:** ${precio_actual:.2f}")
-
-    # 6) Parámetros de simulación
+    selected_ticker = st.selectbox("Seleccioná un ticker", df["Ticker"].unique())
+    
     nivel_riesgo = st.radio(
         "🎯 Tu perfil de riesgo",
         ["Conservador", "Balanceado", "Agresivo"],
-        index=1
+        index=1,
+        help="Define cuánto riesgo estás dispuesto a asumir. Conservador prioriza protección, Agresivo busca mayor upside."
     )
-    tipo_opcion = st.radio("Tipo de opción", ["CALL", "PUT"])
-    rol         = st.radio("Rol en la opción", ["Comprador", "Vendedor"], index=0)
-
+    
+    tipo_opcion = st.radio(
+        "Tipo de opción",
+        ["CALL", "PUT"],
+        help="CALL te beneficia si sube el precio. PUT protege si baja el precio."
+    )
+    
+    rol = st.radio(
+        "Rol en la opción",
+        ["Comprador", "Vendedor"],
+        index=0,
+        help="Elegí si querés simular comprar o vender la opción."
+    )
+    
     sugerencia = {"Conservador": 5, "Balanceado": 10, "Agresivo": 20}
     delta_strike = st.slider(
         "📉 % sobre el precio actual para el strike",
-        -50, 50, sugerencia[nivel_riesgo]
+        -50, 50, sugerencia[nivel_riesgo],
+        help="Determina qué tan alejado estará el strike del precio actual. Positivo para CALL, negativo para PUT."
     )
-    dias_venc = st.slider(
+    
+    dias_a_vencimiento = st.slider(
         "📆 Días hasta vencimiento",
-        7, 90, 30
+        7, 90, 30,
+        help="Número estimado de días hasta la fecha de vencimiento de la opción."
     )
-
-    # 7) Calcula strike y busca cadena de opciones
-    strike_price = round(precio_actual * (1 + delta_strike/100), 2)
-    ticker_yf    = yf.Ticker(selected_ticker)
+    
+    datos = df[df["Ticker"] == selected_ticker].iloc[0]
+    precio_actual = datos["Precio Actual"]
+    strike_price = round(precio_actual * (1 + delta_strike / 100), 2)
+    
+    ticker_yf = yf.Ticker(selected_ticker)
     expiraciones = ticker_yf.options
-    if not expiraciones:
-        st.warning("⚠ No se encontró cadena de opciones para este ticker.")
-        return
+    
+    if expiraciones:
+        fecha_venc = min(
+            expiraciones,
+            key=lambda x: abs((pd.to_datetime(x) - pd.Timestamp.today()).days - dias_a_vencimiento)
+        )
+    
+        cadena = ticker_yf.option_chain(fecha_venc)
+        tabla_opciones = cadena.calls if tipo_opcion == "CALL" else cadena.puts
+        tabla_opciones = tabla_opciones.dropna(subset=["bid", "ask"])
+    
+        if tabla_opciones.empty:
+            st.warning("⚠ No hay opciones válidas para ese strike.")
+        else:
+            fila = tabla_opciones.loc[np.abs(tabla_opciones["strike"] - strike_price).idxmin()]
+            premium = (fila["bid"] + fila["ask"]) / 2
+    
+        st.markdown(f"**Precio actual:** ${precio_actual:.2f}")
+        st.markdown(f"**Strike simulado:** ${strike_price}")
+        st.markdown(f"**Prima estimada:** ${premium:.2f}")
+        st.markdown(f"**Vencimiento elegido:** {fecha_venc}")
+    
+        try:
+            if "delta" in fila and not pd.isna(fila["delta"]):
+                delta = fila["delta"]
+            else:
+                T = dias_a_vencimiento / 365
+                r = 0.02
+                sigma = fila.get("impliedVolatility", 0.25)
+                delta = calcular_delta_call_put(precio_actual, strike_price, T, r, sigma, tipo_opcion)
+    
+            if delta is not None:
+                prob = abs(delta) * 100
+                st.markdown(f"**Probabilidad estimada de que se ejecute la opción (Delta): ~{prob:.1f}%**")
+            else:
+                st.warning("⚠ No se pudo calcular el delta estimado.")
+        except Exception:
+            st.warning("⚠ Error al calcular el delta.")
+    
+        S = np.linspace(precio_actual * 0.6, precio_actual * 1.4, 100)
+        payoff = calcular_payoff_call(S, strike_price, premium) if tipo_opcion == "CALL" else calcular_payoff_put(S, strike_price, premium)
+        if rol == "Vendedor":
+            payoff = -payoff
+    
+        max_payoff = np.max(payoff)
+        if premium > 0 and rol == "Comprador":
+            rentabilidad_pct = (max_payoff / premium) * 100
+            st.markdown(f"**Rentabilidad máxima estimada sobre la prima invertida: ~{rentabilidad_pct:.1f}%**")
+    
+        break_even = strike_price + premium if tipo_opcion == "CALL" else strike_price - premium
+        if rol == "Vendedor":
+            break_even = strike_price - premium if tipo_opcion == "CALL" else strike_price + premium
 
-    # Fecha de vencimiento más cercana al slider
-    fecha_venc = min(
-        expiraciones,
-        key=lambda x: abs((pd.to_datetime(x) - pd.Timestamp.today()).days - dias_venc)
-    )
-    cadena       = ticker_yf.option_chain(fecha_venc)
-    tabla        = cadena.calls if tipo_opcion == "CALL" else cadena.puts
-    tabla        = tabla.dropna(subset=["bid","ask"])
-    if tabla.empty:
-        st.warning("⚠ No hay opciones válidas para ese strike.")
-        return
-
-    # 8) Encuentra fila más cercana al strike
-    fila    = tabla.loc[(tabla["strike"] - strike_price).abs().idxmin()]
-    premium = (fila["bid"] + fila["ask"]) / 2
-
-    # 9) Muestra resultados básicos
-    st.markdown(f"**Strike simulado:** ${strike_price}")
-    st.markdown(f"**Prima estimada:** ${premium:.2f}")
-    st.markdown(f"**Vencimiento elegido:** {fecha_venc}")
-
-    # 10) Calcula Delta → probabilidad
-    T     = dias_venc / 365
-    r     = 0.02
-    sigma = fila.get("impliedVolatility", 0.25)
-    delta = calc_delta(precio_actual, strike_price, T, r, sigma, tipo_opcion)
-    st.markdown(f"**Probabilidad (Delta):** ~{abs(delta)*100:.1f}%")
-
-    # 11) Grafico de Payoff
-    S      = np.linspace(precio_actual*0.6, precio_actual*1.4, 100)
-    payoff = payoff_call(S, strike_price, premium) if tipo_opcion=="CALL" else payoff_put(S, strike_price, premium)
-    if rol == "Vendedor":
-        payoff = -payoff
-
-    fig, ax = plt.subplots(figsize=(5,3))
+    fig, ax = plt.subplots(figsize=(5, 3))
     ax.xaxis.set_major_formatter(mtick.StrMethodFormatter('${x:,.0f}'))
     ax.yaxis.set_major_formatter(mtick.StrMethodFormatter('${x:,.0f}'))
+    ax.set_xlabel("Precio del activo al vencimiento (USD)")
+    ax.set_ylabel("Resultado neto (USD)")
     ax.plot(S, payoff, label=f"Payoff ({rol})")
-    ax.axhline(0, linestyle="--", color="gray")
-    ax.axvline(strike_price, linestyle="--", color="red", label="Strike")
-    break_even = strike_price + (premium if tipo_opcion=="CALL" else -premium)
-    ax.axvline(break_even, linestyle="--", color="green", label="Break-even")
+    ax.axhline(0, color="gray", linestyle="--")
+    ax.axvline(strike_price, color="red", linestyle="--", label="Strike")
+    ax.axvline(break_even, color="green", linestyle="--", label="Break-even")
+    ax.set_title(f"{tipo_opcion} - {selected_ticker} ({nivel_riesgo})")
     ax.legend()
     st.pyplot(fig)
 
-    # 12) Expansores explicativos (opcional)
-    with st.expander("ℹ️ Interpretación"):
+   with st.expander("ℹ️ Interpretación del gráfico"):
         if rol == "Comprador" and tipo_opcion == "CALL":
-            st.markdown(
-                f"- Pagás ${premium:.2f} por comprar a ${strike_price:.2f}.\n"
-                f"- Pierdes solo la prima si no ejerce.\n"
-                f"- Ganás a partir de ${break_even:.2f}."
-            )
-        # … añade los demás casos según prefieras …
+            st.markdown(f"🎯 Comprás el derecho a comprar la acción a {strike_price:.2f} pagando una prima de {premium:.2f}")
+            st.markdown("📉 Si el precio final está por debajo del strike, no ejercés y pierdes solo la prima")
+            st.markdown(f"📈 Si el precio sube por encima de {break_even:.2f}, tienes ganancias netas")
+            st.markdown("⚖️ El gráfico muestra tu rentabilidad según el precio al vencimiento")
+
+        elif rol == "Comprador" and tipo_opcion == "PUT":
+            st.markdown(f"🎯 Comprás el derecho a vender la acción a {strike_price:.2f} pagando una prima de {premium:.2f}")
+            st.markdown(f"📈 Ganás si la acción baja por debajo de {break_even:.2f}")
+            st.markdown("📉 Si se mantiene por encima del strike, la pérdida se limita a la prima")
+            st.markdown("⚖️ El gráfico refleja tu cobertura o especulación a la baja.")
+
+        elif rol == "Vendedor" and tipo_opcion == "CALL":
+            st.markdown(f"💰 Vendés la opción y recibes {premium:.2f} de prima, pero asumes la obligación de vender a {strike_price:.2f}")
+            st.markdown("✅ Si la acción cierra por debajo del strike, ganás toda la prima")
+            st.markdown(f"⚠️ Si sube por encima de {break_even:.2f}, comenzás a perder dinero")
+            st.markdown("📉 Riesgo ilimitado si el precio sube mucho (al menos que tengas las acciones)")
+
+        elif rol == "Vendedor" and tipo_opcion == "PUT":
+            st.markdown(f"💰 Vendés la opción y te pagan {premium:.2f} por asumir la obligación de comprar a {strike_price:.2f}")
+            st.markdown("✅ Ganás la prima si el precio se mantiene por encima del strike")
+            st.markdown(f"⚠️ Si cae por debajo de {break_even:.2f}, comenzás a perder dinero")
+            st.markdown("📉 Riesgo limitado: como máximo hasta que la acción llegue a $0")
+
+    with st.expander("📘 Perfil del rol seleccionado"):
+        if rol == "Comprador":
+            st.markdown(f"💸 Pagás una prima {premium:.2f} por el derecho a ejercer")
+            st.markdown("📈 Ganancia potencial ilimitada (CALL) o limitada (PUT)")
+            st.markdown("🔻 Pérdida máxima: la prima")
+        else:
+            if tipo_opcion == "CALL":
+                st.markdown(f"💵 Recibes una prima {premium:.2f} por asumir la obligación de vender a {strike_price:.2f}")
+                st.markdown("✅ Ganancia máxima: la prima si la acción no supera el strike")
+                st.markdown(f"⚠️ Si el precio sube por encima de {break_even:.2f}, comenzás a tener pérdidas. Estas son potencialmente ilimitadas")
+                st.markdown("🔒 Estrategia útil para generar ingresos si creés que la acción no superará el strike")
+            else:
+                st.markdown(f"💵 Recibes una prima {premium:.2f} por asumir la obligación de comprar a {strike_price:.2f}")
+                st.markdown("✅ Ganancia máxima: la prima si la acción se mantiene por encima del strike.")
+                st.markdown(f"⚠️ Si la acción cae por debajo de {break_even:.2f}, empiezás a tener pérdidas. El riesgo es alto, pero finito (hasta que la acción llegue a $0)")
+                st.markdown("🛡 Estrategia usada si estás dispuesto a comprar la acción más barata que hoy")
 
     # 13) Envío a Telegram
     if st.button("📤 Enviar simulación a Telegram", key="simu_telegram"):
