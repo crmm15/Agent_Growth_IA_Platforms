@@ -15,4 +15,4 @@ def registrar_accion(ticker: str, accion: str, rentab: float):
     }
     df = pd.concat([df, pd.DataFrame([nueva])], ignore_index=True)
     guardar_historial(df)
-    send_telegram_message(f"📢 Acción: *{accion}* para `{ticker}` con rentab *{rentab:.2f}%*")
+    send_telegram_message(f"📢 Acción: *{accion}* para `{ticker}` con rentab *{rentab}%*")
