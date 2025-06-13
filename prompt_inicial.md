@@ -1,6 +1,4 @@
 
-# 💼 Bienvenido a GrowthIA M&M
-
 **GrowthIA M&M** es una plataforma inteligente para la **gestión activa y defensiva de portafolios**, impulsada por lógica de inversión inspirada en leyendas como Warren Buffett, Li Lu, Jim Simons, Bill Ackman y Benjamin Graham.
 
 Esta app integra tres módulos:
