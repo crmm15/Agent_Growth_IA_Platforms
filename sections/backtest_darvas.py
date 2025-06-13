@@ -2,27 +2,63 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import yfinance as yf
 import matplotlib.pyplot as plt
-import datetime
+import yfinance as yf
 
 from utils.indicators import calc_mavilimw, calc_wae
-from utils.backtest_helpers import robust_trend_filter
-
+from utils.backtest_helpers import run_darvas_backtest, robust_trend_filter
 
 def backtest_darvas():
     st.header("📦 Backtesting Estrategia Darvas Box")
 
-    # Parámetros de los indicadores
-    SENSITIVITY = 150
-    FAST_EMA = 20
-    SLOW_EMA = 40
-    CHANNEL_LEN = 20
-    BB_MULT = 2.0
+    # Parámetros fijos de los indicadores
+    SENSITIVITY   = 150
+    FAST_EMA      = 20
+    SLOW_EMA      = 40
+    CHANNEL_LEN   = 20
+    BB_MULT       = 2.0
     DARVAS_WINDOW = 20  # igual que en la config de TradingView
 
-    # ==============================
-    # UI: selección de activo, timeframe y fechas
+    # ================
+    # Funciones auxiliares
+    # ================
+    # (Ya vienen de utils; sólo se muestran aquí para que el módulo sea autónomo)
+    def calc_mavilimw(df, fmal=3, smal=5):
+        M1 = df['Close'].rolling(window=fmal, min_periods=fmal).mean()
+        M2 = M1.rolling(window=smal, min_periods=smal).mean()
+        M3 = M2.rolling(window=fmal+smal, min_periods=fmal+smal).mean()
+        M4 = M3.rolling(window=fmal+2*smal, min_periods=fmal+2*smal).mean()
+        M5 = M4.rolling(window=2*fmal+2*smal, min_periods=2*fmal+2*smal).mean()
+        return M5
+
+    def calc_wae(df, sensitivity=150, fastLength=20, slowLength=40, channelLength=20, mult=2.0):
+        fastMA = df['Close'].ewm(span=fastLength, adjust=False).mean()
+        slowMA = df['Close'].ewm(span=slowLength, adjust=False).mean()
+        macd = fastMA - slowMA
+        macd_shift = macd.shift(1)
+        t1 = (macd - macd_shift) * sensitivity
+
+        basis = df['Close'].rolling(window=channelLength).mean()
+        dev   = df['Close'].rolling(window=channelLength).std(ddof=0) * mult
+        bb_upper = basis + dev
+        bb_lower = basis - dev
+        e1 = bb_upper - bb_lower
+
+        true_range = np.maximum(df['High'] - df['Low'],
+                        np.maximum(
+                            np.abs(df['High'] - df['Close'].shift(1)),
+                            np.abs(df['Low']  - df['Close'].shift(1))
+                        ))
+        deadzone = pd.Series(true_range).rolling(window=100).mean().fillna(0) * 3.7
+
+        df['wae_trendUp']   = np.where(t1 >= 0, t1, 0)
+        df['wae_e1']        = e1
+        df['wae_deadzone']  = deadzone
+        return df
+
+    # ================
+    # UI para selección de datos
+    # ================
     activos_predef = {
         "BTC/USD": "BTC-USD",
         "ETH/USD": "ETH-USD",
@@ -32,110 +68,119 @@ def backtest_darvas():
         "S&P500 ETF (SPY)": "SPY"
     }
     activo_nombre = st.selectbox("Elige activo para backtesting", list(activos_predef.keys()))
-    timeframe     = st.selectbox("Temporalidad", ["1d", "1h", "15m", "5m"], index=0)
-    fecha_inicio  = st.date_input("Desde", value=datetime.date(2023, 1, 1), key="darvas_ini")
-    fecha_fin     = st.date_input("Hasta", value=datetime.date.today(),    key="darvas_fin")
+    activo        = activos_predef[activo_nombre]
 
-    if st.button("Ejecutar Backtest Darvas", key="ejecutar_backtest_darvas"):
-        st.info("Descargando datos históricos...")
+    timeframes = ["1d", "1h", "15m", "5m"]
+    timeframe   = st.selectbox("Temporalidad", timeframes)
 
-        # 1) Descargar datos
-        df = yf.download(
-            activos_predef[activo_nombre],
-            start=fecha_inicio,
-            end=fecha_fin + datetime.timedelta(days=1),
-            interval=timeframe,
-            progress=False
-        )
+    fecha_inicio = st.date_input("Desde", value=pd.to_datetime("2023-01-01"), key="darvas_ini")
+    fecha_fin    = st.date_input("Hasta", value=pd.Timestamp.today(), key="darvas_fin")
 
-        if df.empty:
-            st.error("No se encontraron datos para ese activo y timeframe. Prueba otra combinación.")
-            return
+    if not st.button("Ejecutar Backtest Darvas", key="ejecutar_backtest_darvas"):
+        return
 
-        st.success(f"Datos descargados: {len(df)} filas")
-        st.dataframe(df)
+    st.info("Descargando datos históricos…")
+    df = yf.download(
+        activo,
+        start=fecha_inicio,
+        end=fecha_fin + pd.Timedelta(days=1),
+        interval=timeframe,
+        progress=False
+    )
 
-        # Normaliza columnas en caso de MultiIndex
-        if isinstance(df.columns, pd.MultiIndex):
-            df.columns = [col[0].capitalize() for col in df.columns]
-        else:
-            df.columns = [str(col).capitalize() for col in df.columns]
+    if df.empty:
+        st.error("No se encontraron datos para esa combinación de activo/timeframe.")
+        return
+    st.success(f"Datos descargados: {len(df)} filas")
 
-        # Verifica columnas requeridas
-        required_cols = ["Close", "High", "Low"]
-        if not all(col in df.columns for col in required_cols):
-            st.error(f"El DataFrame descargado NO tiene todas las columnas requeridas: {required_cols}.")
-            st.dataframe(df)
-            return
+    # Normaliza y limpia el DataFrame
+    if isinstance(df.columns[0], tuple):
+        df.columns = [col[0].capitalize() for col in df.columns]
+    else:
+        df.columns = [str(col).capitalize() for col in df.columns]
 
-        df = df.reset_index(drop=False)
-        df = df.dropna(subset=required_cols)
+    df = df.reset_index().dropna(subset=["Close", "High", "Low"])
 
-        # ==============================
-        # 2) Señales Darvas
-        df['darvas_high']   = df['High'].rolling(window=DARVAS_WINDOW, min_periods=DARVAS_WINDOW).max()
-        df['darvas_low']    = df['Low'].rolling(window=DARVAS_WINDOW, min_periods=DARVAS_WINDOW).min()
-        df['prev_darvas_high'] = df['darvas_high'].shift(1)
-        df['prev_close']    = df['Close'].shift(1)
+    # ==============================
+    # Señal Darvas
+    df['darvas_high']    = df['High'].rolling(window=DARVAS_WINDOW, min_periods=DARVAS_WINDOW).max()
+    df['darvas_low']     = df['Low'].rolling( window=DARVAS_WINDOW, min_periods=DARVAS_WINDOW).min()
+    df['prev_darvas_high'] = df['darvas_high'].shift(1)
+    df['prev_close']     = df['Close'].shift(1)
 
-        df['buy_signal']  = (
-            (df['Close'] > df['prev_darvas_high']) &
-            (df['prev_close'] <= df['prev_darvas_high'])
-        )
-        df['sell_signal'] = (
-            (df['Close'] < df['darvas_low'].shift(1)) &
-            (df['prev_close'] >= df['darvas_low'].shift(1))
-        )
+    df['buy_signal']  = (
+        (df['Close'] > df['prev_darvas_high']) &
+        (df['prev_close'] <= df['prev_darvas_high'])
+    )
+    df['sell_signal'] = (
+        (df['Close'] < df['darvas_low'].shift(1)) &
+        (df['prev_close'] >= df['darvas_low'].shift(1))
+    )
 
-        # ==============================
-        # 3) Indicador de tendencia y fuerza
-        df['mavilimw']     = calc_mavilimw(df)
-        df['trend_filter'] = robust_trend_filter(df)
-        df = calc_wae(df, sensitivity=SENSITIVITY, fastLength=FAST_EMA, slowLength=SLOW_EMA, channelLength=CHANNEL_LEN, mult=BB_MULT)
-        df['wae_filter']   = (
-            (df['wae_trendUp'] > df['wae_e1']) &
-            (df['wae_trendUp'] > df['wae_deadzone'])
-        )
+    # ==============================
+    # Indicador MavilimW + filtro de tendencia
+    df['mavilimw']      = calc_mavilimw(df)
+    df['trend_filter']  = robust_trend_filter(df)
 
-        # ==============================
-        # 4) Señal final compuesta
-        df['buy_final'] = df['buy_signal'] & df['trend_filter'] & df['wae_filter']
+    # ==============================
+    # Indicador WAE + filtro de fuerza
+    df = calc_wae(
+        df,
+        sensitivity=SENSITIVITY,
+        fastLength=FAST_EMA,
+        slowLength=SLOW_EMA,
+        channelLength=CHANNEL_LEN,
+        mult=BB_MULT
+    )
+    df['wae_filter'] = (
+        (df['wae_trendUp'] > df['wae_e1']) &
+        (df['wae_trendUp'] > df['wae_deadzone'])
+    )
 
-        # ==============================
-        # 5) Mostrar tabla de señales
-        cols_signals = [
-            "Close", "darvas_high", "darvas_low", "mavilimw", "wae_trendUp", "wae_e1", "wae_deadzone",
-            "buy_signal", "trend_filter", "wae_filter", "buy_final", "sell_signal"
-        ]
-        df_signals = df.loc[df['buy_signal'] | df['sell_signal'], cols_signals].copy()
-        st.success(f"Número de primeras señales detectadas: {len(df_signals)}")
-        st.dataframe(
-            df_signals.head(100),
-            column_config={
-                "Close": st.column_config.NumberColumn("Close"),
-                "darvas_high": st.column_config.NumberColumn("Darvas High"),
-                "darvas_low": st.column_config.NumberColumn("Darvas Low"),
-                "mavilimw": st.column_config.NumberColumn("MavilimW"),
-                "wae_trendUp": st.column_config.NumberColumn("WAE TrendUp"),
-                "wae_e1": st.column_config.NumberColumn("WAE E1"),
-                "wae_deadzone": st.column_config.NumberColumn("WAE DeadZone"),
-                "buy_signal": st.column_config.CheckboxColumn("Buy Signal"),
-                "trend_filter": st.column_config.CheckboxColumn("Trend Filter"),
-                "wae_filter": st.column_config.CheckboxColumn("WAE Filter"),
-                "buy_final": st.column_config.CheckboxColumn("Buy Final"),
-                "sell_signal": st.column_config.CheckboxColumn("Sell Signal")
-            }
-        )
+    # ==============================
+    # Señal FINAL: se cumplen Darvas + tendencia + fuerza
+    df['buy_final'] = df['buy_signal'] & df['trend_filter'] & df['wae_filter']
 
-        # ==============================
-        # 6) Gráfico de precio y señales
-        fig, ax = plt.subplots(figsize=(12, 5))
-        ax.plot(df.index, df['Close'], label="Precio Close", color="black", zorder=1)
-        ax.plot(df.index, df['darvas_high'], label="Darvas High", color="green", linestyle="--", alpha=0.7, zorder=1)
-        ax.plot(df.index, df['darvas_low'], label="Darvas Low", color="red", linestyle="--", alpha=0.7, zorder=1)
-        ax.plot(df.index, df['mavilimw'], label="MavilimW (Tendencia)", color="white", linewidth=2, zorder=2)
-        ax.scatter(df.index[df['buy_final']], df.loc[df['buy_final'], 'Close'], marker="^", color="blue", s=120, zorder=3, label="Señal Entrada")
-        ax.scatter(df.index[df['sell_signal']], df.loc[df['sell_signal'], 'Close'], marker="v", color="orange", s=100, zorder=3, label="Señal Venta")
-        ax.set_title(f"Darvas Box Backtest - {activo_nombre} [{timeframe}]")
-        ax.legend()
-        st.pyplot(fig)
+    # ==============================
+    # Tabla de señales finales (buy_final o sell_signal)
+    cols_signals = [
+        "Close","darvas_high","darvas_low","mavilimw",
+        "wae_trendUp","wae_e1","wae_deadzone",
+        "buy_signal","trend_filter","wae_filter",
+        "buy_final","sell_signal"
+    ]
+    df_signals = df.loc[df['buy_final'] | df['sell_signal'], cols_signals]
+    num_signals = len(df_signals)
+    st.success(f"Número de señales finales detectadas: {num_signals}")
+
+    st.dataframe(
+        df_signals,
+        column_config={
+            "Darvas High":   st.column_config.NumberColumn("Darvas High"),
+            "Darvas Low":    st.column_config.NumberColumn("Darvas Low"),
+            "MavilimW":      st.column_config.NumberColumn("MavilimW"),
+            "WAE TrendUp":   st.column_config.NumberColumn("WAE TrendUp"),
+            "WAE E1":        st.column_config.NumberColumn("WAE E1"),
+            "WAE DeadZone":  st.column_config.NumberColumn("WAE DeadZone"),
+            "buy_signal":    st.column_config.CheckboxColumn("Buy Signal"),
+            "trend_filter":  st.column_config.CheckboxColumn("Trend Filter"),
+            "wae_filter":    st.column_config.CheckboxColumn("WAE Filter"),
+            "buy_final":     st.column_config.CheckboxColumn("Buy Final"),
+            "sell_signal":   st.column_config.CheckboxColumn("Sell Signal"),
+        }
+    )
+
+    # ==============================
+    # Gráfico con señales
+    fig, ax = plt.subplots(figsize=(12, 5))
+    ax.plot(df['Date'], df['Close'],            label="Precio Close", color="black", zorder=1)
+    ax.plot(df['Date'], df['darvas_high'],      label="Darvas High", color="green", linestyle="--", alpha=0.7, zorder=1)
+    ax.plot(df['Date'], df['darvas_low'],       label="Darvas Low",  color="red",   linestyle="--", alpha=0.7, zorder=1)
+    ax.plot(df['Date'], df['mavilimw'],         label="MavilimW",    color="white", linewidth=2, zorder=2)
+    ax.scatter(df.loc[df['buy_final'], 'Date'], df.loc[df['buy_final'], 'Close'],
+               marker="^", color="blue",  s=120, label="Señal Entrada", zorder=3)
+    ax.scatter(df.loc[df['sell_signal'], 'Date'], df.loc[df['sell_signal'], 'Close'],
+               marker="v", color="orange", s=120, label="Señal Venta",   zorder=3)
+    ax.set_title(f"Darvas Box Backtest - {activo_nombre} [{timeframe}]")
+    ax.legend()
+    st.pyplot(fig)
