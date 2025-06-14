@@ -9,7 +9,6 @@ def calcular_delta_call_put(S, K, T, r, sigma, tipo="CALL"):
     except:
         return None
 
-
 def calcular_payoff_call(S, K, premium):
     return np.maximum(S-K,0) - premium
 
