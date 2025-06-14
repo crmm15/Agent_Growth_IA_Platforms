@@ -109,7 +109,7 @@ def backtest_darvas():
     df_signals = df.loc[df['buy_final'] | df['sell_final'], cols].copy()
 
     # Formateo de la columna Date
-    df_signals['Date'] = pd.to_datetime(df_signals['Date']).dt.tz_localize(None).dt.strftime('%d-%m-%Y')
+    df_signals['Date'] = pd.to_datetime(df_signals['Date']).dt.tz_localize(None).dt.strftime('%d/%m/%Y')
 
     # Definir formato numérico
     fmt = {
