@@ -140,8 +140,7 @@ def backtest_darvas():
             "wae_trendDown":   st.column_config.NumberColumn("WAE↓",        format=", .2f"),
         },
         hide_index=True
-    )
-
+        
     # 12) Gráfico de Backtest
     fig, ax = plt.subplots(figsize=(12, 5))
     ax.plot(df["Date"], df["Close"],      label="Precio Close", color="black", zorder=1)
