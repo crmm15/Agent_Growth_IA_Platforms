@@ -25,7 +25,6 @@ seccion = st.sidebar.radio(
         "Backtesting Darvas"
     ]
 )
-
 # ——— Rutina principal ———————————————————————————————————————
 if seccion == "Inicio":
     show_inicio()
