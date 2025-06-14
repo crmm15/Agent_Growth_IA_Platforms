@@ -106,8 +106,47 @@ def backtest_darvas():
         'sell_signal','trend_down','wae_filter_sell','sell_final'
     ]
     df_signals = df.loc[df['buy_final'] | df['sell_final'], cols]
+        # … después de haber construido df_signals …
     st.success(f"Número de señales detectadas: {len(df_signals)}")
-    st.dataframe(df_signals)
+
+    # Asegúrate de que la columna Date sea datetime sin tz:
+    df_signals["Date"] = pd.to_datetime(df_signals["Date"]).dt.tz_localize(None)
+
+    st.dataframe(
+        df_signals,
+        use_container_width=True,
+        column_config={
+            "Date": st.column_config.DateColumn(
+                "Fecha", format="DD-MM-YYYY", help="Fecha de la señal"
+            ),
+            "Close": st.column_config.NumberColumn(
+                "Cierre", format="%0,.2f", help="Precio de cierre"
+            ),
+            "darvas_high": st.column_config.NumberColumn(
+                "Darvas High", format="%0,.2f"
+            ),
+            "darvas_low": st.column_config.NumberColumn(
+                "Darvas Low", format="%0,.2f"
+            ),
+            "mavilimw": st.column_config.NumberColumn(
+                "MavilimW", format="%0,.2f"
+            ),
+            "wae_trendUp": st.column_config.NumberColumn(
+                "WAE↑", format="%0,.2f"
+            ),
+            "wae_e1": st.column_config.NumberColumn(
+                "Explosion", format="%0,.2f"
+            ),
+            "wae_deadzone": st.column_config.NumberColumn(
+                "DeadZone", format="%0,.2f"
+            ),
+            "wae_trendDown": st.column_config.NumberColumn(
+                "WAE↓", format="%0,.2f"
+            ),
+            # … etc. para cada columna numérica …
+        }
+    )
+
 
     # 11) Gráfico de Backtest
     fig, ax = plt.subplots(figsize=(12, 5))
