@@ -13,7 +13,7 @@ def cargar_historial() -> pd.DataFrame:
             return pd.DataFrame(
                 columns=["Fecha", "Ticker", "Acción Tomada", "Rentabilidad %"]
             )
-    # Si no existe aún el archivo
+    # Si no existe aún el archivo 
     return pd.DataFrame(
         columns=["Fecha", "Ticker", "Acción Tomada", "Rentabilidad %"]
     )
