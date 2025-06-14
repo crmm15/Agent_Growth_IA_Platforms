@@ -17,7 +17,7 @@ def simulador_opciones():
     st.subheader("📈 Simulador de Opciones con Perfil de Riesgo")
 
     # Subida de Excel con tabla de inversiones
-     archivo = st.session_state.get("global_excel")
+    archivo = st.session_state.get("global_excel")
     if archivo is None:
         st.info("Subí el archivo Excel para empezar.")
         return
