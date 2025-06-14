@@ -10,11 +10,7 @@ def gestor_portfolio():
     st.subheader("📊 Análisis de Posiciones")
 
     # Subida de Excel
-    archivo = st.sidebar.file_uploader(
-        "📁 Subí tu archivo Excel (.xlsx)",
-        type=["xlsx"],
-        key="uploader_portafolio"
-    )
+    archivo = st.session_state.get("global_excel")
     if archivo is None:
         st.info("Subí el archivo Excel para empezar.")
         return
