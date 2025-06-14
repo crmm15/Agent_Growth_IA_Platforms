@@ -1,4 +1,4 @@
-# sections/gestor_portfolio.py
+# sections/gestor_portfolio.py 
 import streamlit as st
 import pandas as pd
 import numpy as np
