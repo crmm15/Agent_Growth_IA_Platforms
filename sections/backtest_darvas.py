@@ -147,7 +147,6 @@ def backtest_darvas():
         }
     )
 
-
     # 11) Gráfico de Backtest
     fig, ax = plt.subplots(figsize=(12, 5))
     ax.plot(df.index, df['Close'],       label="Precio Close", color="black", zorder=1)
