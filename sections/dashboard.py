@@ -1,4 +1,4 @@
-# sections/dashboard.py
+# sections/dashboard.py 
 import streamlit as st
 import pandas as pd
 from utils.data_io import cargar_historial
