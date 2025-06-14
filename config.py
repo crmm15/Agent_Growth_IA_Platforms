@@ -1,5 +1,5 @@
 #contiene operaciones de E/S, datos de mercado, cálculos de opciones, registro de portafolio 
-#y notificaciones por Telegram, con caché y limpieza de código.
+#y notificaciones por Telegram, con caché y limpieza de código
 
 import streamlit as st
 from pathlib import Path
