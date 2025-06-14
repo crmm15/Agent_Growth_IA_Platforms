@@ -15,7 +15,6 @@ import datetime
 import requests
 from streamlit import secrets
 
-
 def generar_y_enviar_resumen_telegram():
     log = "registro_acciones.csv"
     if not os.path.exists(log): return
