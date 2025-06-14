@@ -1,4 +1,4 @@
-# sections/simulador_opciones.py
+# sections/simulador_opciones.py 
 import streamlit as st
 import pandas as pd
 import numpy as np
