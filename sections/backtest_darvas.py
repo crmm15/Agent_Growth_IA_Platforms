@@ -114,7 +114,7 @@ def backtest_darvas():
         df_signals,
         use_container_width=True,
         column_config={
-            'Date': st.column_config.DateColumn('Fecha', format='DD-MM-YYYY'),
+            'Date': st.column_config.DateColumn('Fecha', format='DD/MM/YYYY'),
             'Close': st.column_config.NumberColumn('Cierre', format=',.2f'),
             'darvas_high': st.column_config.NumberColumn('Darvas High', format=',.2f'),
             'darvas_low': st.column_config.NumberColumn('Darvas Low', format=',.2f'),
