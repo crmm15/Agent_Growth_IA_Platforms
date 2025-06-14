@@ -1,4 +1,4 @@
-# 🧠 Agent GrowthIA M&M – Plataforma GPT de Gestión Patrimonial
+# 🧠 Agent GrowthIA M&M
 
 Esta aplicación combina inteligencia artificial, análisis cuantitativo y simulación de opciones para ayudarte a gestionar y proteger tu portafolio como lo haría un gestor profesional.
 
