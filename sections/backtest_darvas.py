@@ -53,7 +53,38 @@ def backtest_darvas():
         return
 
     st.success(f"Datos descargados: {len(df)} filas")
-    st.dataframe(df)
+    # — formatear fecha y columnas numéricas de la tabla histórica —
+
+    # 1) llevar el índice a columna Date y eliminar tz
+    df_hist = df.reset_index().rename(columns={'index':'Date'})
+    df_hist['Date'] = pd.to_datetime(df_hist['Date']).dt.tz_localize(None)
+    
+    # 2) mostrar con formatos
+    st.dataframe(
+        df_hist,
+        use_container_width=True,
+        column_config={
+            'Date': st.column_config.DateColumn(
+                'Fecha', format='DD/MM/YYYY', help='Fecha de la vela'
+            ),
+            'Open': st.column_config.NumberColumn(
+                'Apertura', format=',.2f', help='Precio apertura'
+            ),
+            'High': st.column_config.NumberColumn(
+                'Máximo', format=',.2f'
+            ),
+            'Low': st.column_config.NumberColumn(
+                'Mínimo', format=',.2f'
+            ),
+            'Close': st.column_config.NumberColumn(
+                'Cierre', format=',.2f'
+            ),
+            'Volume': st.column_config.NumberColumn(
+                'Volumen', format=','
+            ),
+        }
+    )
+
 
     # 4) Normalizar y limpiar
     df = df.reset_index(drop=False)
