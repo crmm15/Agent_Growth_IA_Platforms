@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 
-
 def wma(series: pd.Series, length: int) -> pd.Series:
     """
     Weighted Moving Average (WMA) implementation matching TradingView's wma().
