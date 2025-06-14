@@ -12,7 +12,6 @@ def wma(series: pd.Series, length: int) -> pd.Series:
     # Apply rolling WMA
     return series.rolling(length).apply(lambda x: np.dot(x, weights) / denom, raw=True)
 
-
 def calc_mavilimw(df: pd.DataFrame, fmal: int = 3, smal: int = 5) -> pd.Series:
     """
     Nested WMA chain replicating the MavilimW indicator from TradingView.
