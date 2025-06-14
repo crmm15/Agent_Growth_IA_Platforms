@@ -22,7 +22,7 @@ def backtest_darvas():
     activo_nombre = st.selectbox("Elige activo para backtesting", list(activos_predef.keys()))
     activo = activos_predef[activo_nombre]
 
-    timeframes = ["1s","1d", "4h"]
+    timeframes = ["1d","1h", "15m"]
     timeframe = st.selectbox("Temporalidad", timeframes)
 
     start = st.date_input("Desde", value=pd.to_datetime("2023-01-01"), key="darvas_start")
