@@ -97,10 +97,10 @@ def backtest_darvas():
     # 9) Señales finales (sin limitar a la primera)
     df['buy_final']  = df['buy_signal']  & df['trend_up']   & df['wae_filter_buy']
     df['sell_final'] = df['sell_signal'] & df['trend_down'] & df['wae_filter_sell']
-
+    df = df.reset_index(drop=False)
     # 10) Mostrar todas las señales encontradas
     cols = [
-        'Close','darvas_high','darvas_low','mavilimw',
+        "Date",'Close','darvas_high','darvas_low','mavilimw',
         'wae_trendUp','wae_e1','wae_deadzone','wae_trendDown',
         'buy_signal','trend_up','wae_filter_buy','buy_final',
         'sell_signal','trend_down','wae_filter_sell','sell_final'
