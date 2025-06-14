@@ -22,7 +22,7 @@ def backtest_darvas():
     activo_nombre = st.selectbox("Elige activo para backtesting", list(activos_predef.keys()))
     activo = activos_predef[activo_nombre]
 
-    timeframes = ["1d", "1h", "15m", "5m"]
+    timeframes = ["1s","1d", "4h"]
     timeframe = st.selectbox("Temporalidad", timeframes)
 
     start = st.date_input("Desde", value=pd.to_datetime("2023-01-01"), key="darvas_start")
@@ -31,7 +31,7 @@ def backtest_darvas():
     # largo variable del Darvas Box
     DARVAS_WINDOW = st.slider(
         "Largo del Darvas Box (boxp)",
-        min_value=2, max_value=50, value=20, step=1, key="darvas_window"
+        min_value=1, max_value=50, value=5, step=1, key="darvas_window"
     )
 
     if not st.button("Ejecutar Backtest Darvas", key="run_darvas"):
