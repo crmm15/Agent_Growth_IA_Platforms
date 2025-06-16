@@ -63,12 +63,12 @@ def backtest_darvas():
         df_hist,
         use_container_width=True,
         column_config={
-            'Date':   st.column_config.DateColumn('Fecha',     format='DD/MM/YYYY'),
+            'Date':   st.column_config.DateColumn('Fecha',format='DD/MM/YYYY'),
             'Open':   st.column_config.NumberColumn('Apertura'),
-            'High':   st.column_config.NumberColumn('Máximo',   format=',.2f'),
-            'Low':    st.column_config.NumberColumn('Mínimo',   format=',.2f'),
-            'Close':  st.column_config.NumberColumn('Cierre',   format=',.2f'),
-            'Volume': st.column_config.NumberColumn('Volumen',  format='0,')
+            'High':   st.column_config.NumberColumn('Máximo'),
+            'Low':    st.column_config.NumberColumn('Mínimo'),
+            'Close':  st.column_config.NumberColumn('Cierre'),
+            'Volume': st.column_config.NumberColumn('Volumen')
         }
     )
 
@@ -136,15 +136,15 @@ def backtest_darvas():
         df_signals,
         use_container_width=True,
         column_config={
-            'Date':             st.column_config.DateColumn('Fecha',       format='DD-MM-YYYY'),
-            'Close':            st.column_config.NumberColumn('Cierre',     format=',.2f'),
-            'darvas_high':      st.column_config.NumberColumn('Darvas High',format=',.2f'),
-            'darvas_low':       st.column_config.NumberColumn('Darvas Low', format=',.2f'),
-            'mavilimw':         st.column_config.NumberColumn('MavilimW',   format=',.2f'),
-            'wae_trendUp':      st.column_config.NumberColumn('WAE↑',       format=',.2f'),
-            'wae_e1':           st.column_config.NumberColumn('Explosión',  format=',.2f'),
-            'wae_deadzone':     st.column_config.NumberColumn('DeadZone',   format=',.2f'),
-            'wae_trendDown':    st.column_config.NumberColumn('WAE↓',       format=',.2f')
+            'Date':             st.column_config.DateColumn('Fecha',format='DD/MM7YYYY'),
+            'Close':            st.column_config.NumberColumn('Cierre'),
+            'darvas_high':      st.column_config.NumberColumn('Darvas High'),
+            'darvas_low':       st.column_config.NumberColumn('Darvas Low'),
+            'mavilimw':         st.column_config.NumberColumn('MavilimW'),
+            'wae_trendUp':      st.column_config.NumberColumn('WAE↑'),
+            'wae_e1':           st.column_config.NumberColumn('Explosión'),
+            'wae_deadzone':     st.column_config.NumberColumn('DeadZone'),
+            'wae_trendDown':    st.column_config.NumberColumn('WAE↓')
             # NO BooleanColumn aquí, ya que las lógicas no necesitan formato
         }
     )
