@@ -63,8 +63,8 @@ def backtest_darvas():
         df_hist,
         use_container_width=True,
         column_config={
-            'Date':   st.column_config.DateColumn('Fecha',     format='DD-MM-YYYY'),
-            'Open':   st.column_config.NumberColumn('Apertura', format=',.2f'),
+            'Date':   st.column_config.DateColumn('Fecha',     format='DD/MM/YYYY'),
+            'Open':   st.column_config.NumberColumn('Apertura'),
             'High':   st.column_config.NumberColumn('Máximo',   format=',.2f'),
             'Low':    st.column_config.NumberColumn('Mínimo',   format=',.2f'),
             'Close':  st.column_config.NumberColumn('Cierre',   format=',.2f'),
