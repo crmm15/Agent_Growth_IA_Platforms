@@ -52,6 +52,13 @@ def backtest_darvas():
     # 4) Preparo tabla histórica
     df_hist = df.reset_index().rename(columns={'index':'Date'})
     df_hist['Date'] = pd.to_datetime(df_hist['Date']).dt.tz_localize(None)
+
+    # FORZAMOS columnas numéricas (¡esto es lo importante!)
+    numeric_cols_hist = ['Open', 'High', 'Low', 'Close', 'Volume']
+    for col in numeric_cols_hist:
+        if col in df_hist.columns:
+            df_hist[col] = pd.to_numeric(df_hist[col], errors='coerce')
+
     st.dataframe(
         df_hist,
         use_container_width=True,
@@ -117,6 +124,13 @@ def backtest_darvas():
     ]
     df_signals = df_calc.loc[df_calc['buy_final'] | df_calc['sell_final'], cols]
 
+    # FORZAMOS columnas numéricas para las señales
+    numeric_cols_signals = ['Close', 'darvas_high', 'darvas_low', 'mavilimw',
+                            'wae_trendUp', 'wae_e1', 'wae_deadzone', 'wae_trendDown']
+    for col in numeric_cols_signals:
+        if col in df_signals.columns:
+            df_signals[col] = pd.to_numeric(df_signals[col], errors='coerce')
+
     st.success(f"Número de señales detectadas: {len(df_signals)}")
     st.dataframe(
         df_signals,
@@ -131,7 +145,7 @@ def backtest_darvas():
             'wae_e1':           st.column_config.NumberColumn('Explosión',  format=',.2f'),
             'wae_deadzone':     st.column_config.NumberColumn('DeadZone',   format=',.2f'),
             'wae_trendDown':    st.column_config.NumberColumn('WAE↓',       format=',.2f')
-            # NO BooleanColumn aquí
+            # NO BooleanColumn aquí, ya que las lógicas no necesitan formato
         }
     )
 
