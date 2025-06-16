@@ -1,3 +1,5 @@
+# sections/backtest_darvas.py
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -50,39 +52,51 @@ def backtest_darvas():
         st.error("No se encontraron datos para esa configuración.")
         return
 
-    st.success(f"Datos descargados: {len(df)} filas")
-    st.dataframe(df)
+    # Quitar timezone y pasar índice a columna Date
+    df.index = pd.to_datetime(df.index).tz_localize(None)
+    df_hist = df.reset_index().rename(columns={'index':'Date'})
 
-    # 4) Normalizar y limpiar
-    df = df.reset_index(drop=False)
-    df = df.dropna(subset=["Close", "High", "Low"])
+    st.success(f"Datos descargados: {len(df_hist)} filas")
+    # 4) Mostrar tabla de históricos con formato
+    st.dataframe(
+        df_hist,
+        use_container_width=True,
+        column_config={
+            'Date': st.column_config.DateColumn('Fecha', format='DD/MM/YYYY'),
+            'Open': st.column_config.NumberColumn('Apertura', format=',.2f'),
+            'High': st.column_config.NumberColumn('Máximo', format=',.2f'),
+            'Low': st.column_config.NumberColumn('Mínimo', format=',.2f'),
+            'Close': st.column_config.NumberColumn('Cierre', format=',.2f'),
+            'Volume': st.column_config.NumberColumn('Volumen', format=','),
+        }
+    )
 
-    # 5) Cálculo Darvas Box
+    # 5) Normalizar y limpiar para cálculo de indicadores
+    df = df_hist.dropna(subset=["Close", "High", "Low"]).copy()
+
+    # 6) Cálculo Darvas Box
     df['darvas_high']      = df['High'].rolling(window=DARVAS_WINDOW, min_periods=DARVAS_WINDOW).max()
     df['darvas_low']       = df['Low'].rolling(window=DARVAS_WINDOW, min_periods=DARVAS_WINDOW).min()
     df['prev_darvas_high'] = df['darvas_high'].shift(1)
     df['prev_darvas_low']  = df['darvas_low'].shift(1)
     df['prev_close']       = df['Close'].shift(1)
 
-    # 6) Señales Darvas (ruptura primera vez)
+    # 7) Señales Darvas (ruptura de una vez)
     df['buy_signal']  = (df['Close'] > df['prev_darvas_high']) & (df['prev_close'] <= df['prev_darvas_high'])
     df['sell_signal'] = (df['Close'] < df['prev_darvas_low'])  & (df['prev_close'] >= df['prev_darvas_low'])
 
-    # 7) Filtro de tendencia con MavilimW (media de dos barras atrás)
-    df['mavilimw']   = calc_mavilimw(df)
-    df['trend_up']   = df['Close'] > df['mavilimw'].shift(2)
-    df['trend_down'] = df['Close'] < df['mavilimw'].shift(2)
+    # 8) Filtro de tendencia con MavilimW (dos barras atrás)
+    df['mavilimw']    = calc_mavilimw(df)
+    df['trend_up']    = df['Close'] > df['mavilimw'].shift(2)
+    df['trend_down']  = df['Close'] < df['mavilimw'].shift(2)
 
-    # 8) Filtro de fuerza con WAE
-    df = calc_wae(
-        df,
-        sensitivity=SENSITIVITY,
-        fastLength=FAST_EMA,
-        slowLength=SLOW_EMA,
-        channelLength=CHANNEL_LEN,
-        mult=BB_MULT
-    )
-    # calculamos momentum bajista
+    # 9) Filtro de fuerza con WAE
+    df = calc_wae(df,
+                 sensitivity=SENSITIVITY,
+                 fastLength=FAST_EMA,
+                 slowLength=SLOW_EMA,
+                 channelLength=CHANNEL_LEN,
+                 mult=BB_MULT)
     fastMA     = df['Close'].ewm(span=FAST_EMA, adjust=False).mean()
     slowMA     = df['Close'].ewm(span=SLOW_EMA, adjust=False).mean()
     macd       = fastMA - slowMA
@@ -93,11 +107,11 @@ def backtest_darvas():
     df['wae_filter_buy']  = (df['wae_trendUp']   > df['wae_e1']) & (df['wae_trendUp']   > df['wae_deadzone'])
     df['wae_filter_sell'] = (df['wae_trendDown'] > df['wae_e1']) & (df['wae_trendDown'] > df['wae_deadzone'])
 
-    # 9) Señales finales (sin limitar a la primera)
+    # 10) Señales finales
     df['buy_final']  = df['buy_signal']  & df['trend_up']   & df['wae_filter_buy']
     df['sell_final'] = df['sell_signal'] & df['trend_down'] & df['wae_filter_sell']
 
-    # 10) Mostrar todas las señales encontradas
+    # 11) Extraer y formatear señales
     cols = [
         'Date', 'Close', 'darvas_high', 'darvas_low', 'mavilimw',
         'wae_trendUp', 'wae_e1', 'wae_deadzone', 'wae_trendDown',
@@ -105,8 +119,6 @@ def backtest_darvas():
         'sell_signal', 'trend_down', 'wae_filter_sell', 'sell_final'
     ]
     df_signals = df.loc[df['buy_final'] | df['sell_final'], cols].copy()
-
-    # Asegura que Date es datetime sin tz y formateo
     df_signals['Date'] = pd.to_datetime(df_signals['Date']).dt.tz_localize(None)
 
     st.success(f"Número de señales detectadas: {len(df_signals)}")
@@ -114,7 +126,7 @@ def backtest_darvas():
         df_signals,
         use_container_width=True,
         column_config={
-            'Date': st.column_config.DateColumn('Fecha', format='DD-MM-YYYY'),
+            'Date': st.column_config.DateColumn('Fecha', format='DD/MM/YYYY'),
             'Close': st.column_config.NumberColumn('Cierre', format=',.2f'),
             'darvas_high': st.column_config.NumberColumn('Darvas High', format=',.2f'),
             'darvas_low': st.column_config.NumberColumn('Darvas Low', format=',.2f'),
@@ -126,7 +138,7 @@ def backtest_darvas():
         }
     )
 
-    # 11) Gráfico de Backtest
+    # 12) Gráfico de Backtest
     fig, ax = plt.subplots(figsize=(12, 5))
     ax.plot(df.index, df['Close'],       label='Precio Close', color='black', zorder=1)
     ax.plot(df.index, df['darvas_high'],  label='Darvas High', linestyle='--', zorder=1)
