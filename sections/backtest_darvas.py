@@ -123,3 +123,27 @@ def backtest_darvas():
     ax.set_title(f"Darvas Box Backtest - {activo_nombre} [{timeframe}]")
     ax.legend()
     st.pyplot(fig)
+
+    # 12) Explicación de señales
+    with st.expander("ℹ️ Interpretación de las señales"):
+        st.markdown("""  
+        - 🔼 **Señal de compra**: se genera cuando el precio cierra por encima de la Darvas High del día anterior, la tendencia (MavilimW) es alcista y la fuerza (WAE) supera el umbral.  
+        - 🔽 **Señal de venta**: se genera cuando el precio cierra por debajo de la Darvas Low del día anterior, la tendencia es bajista y la fuerza WAE también confirma impulso a la baja.  
+        - 📅 **Fecha**: corresponde al día en que se rompe el canal Darvas y se cumplen ambos filtros.  
+        - 📊 **Cantidad de señales**: compras y ventas detectadas en el periodo seleccionado.
+        """)
+
+    # 13) Perfil del backtest
+    with st.expander("📈 Perfil del Backtest"):
+        # calculamos algunos KPIs básicos
+        total_ops = len(df_signals)
+        compras    = df_signals['buy_final'].sum()
+        ventas     = df_signals['sell_final'].sum()
+        st.markdown(f"""
+        - 🔄 **Operaciones totales**: {total_ops}  
+        - 🟢 **Compras**: {compras}  
+        - 🔴 **Ventas**: {ventas}  
+        - ⏳ **Periodo analizado**: {start.strftime('%d/%m/%Y')} a {end.strftime('%d/%m/%Y')}  
+        - ⚙️ **Parámetros**: Darvas Window = {DARVAS_WINDOW}, EMA rápida = {FAST_EMA}, EMA lenta = {SLOW_EMA}
+        """)
+
