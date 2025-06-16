@@ -23,7 +23,7 @@ def backtest_darvas():
     activo        = activos_predef[activo_nombre]
 
     timeframe = st.selectbox("Temporalidad", ["1d", "1h", "15m", "5m"])
-    start     = st.date_input("Desde", pd.to_datetime("2023-01-01"), key="darvas_start")
+    start     = st.date_input("Desde", pd.to_datetime("2020/01/01"), key="darvas_start")
     end       = st.date_input("Hasta", pd.to_datetime("today"),     key="darvas_end")
 
     DARVAS_WINDOW = st.slider(
@@ -136,7 +136,7 @@ def backtest_darvas():
         df_signals,
         use_container_width=True,
         column_config={
-            'Date':             st.column_config.DateColumn('Fecha',format='DD/MM7YYYY'),
+            'Date':             st.column_config.DateColumn('Fecha',format='DD/MM/YYYY'),
             'Close':            st.column_config.NumberColumn('Cierre'),
             'darvas_high':      st.column_config.NumberColumn('Darvas High'),
             'darvas_low':       st.column_config.NumberColumn('Darvas Low'),
