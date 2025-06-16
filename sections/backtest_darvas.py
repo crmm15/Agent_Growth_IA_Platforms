@@ -29,7 +29,7 @@ def backtest_darvas():
     start = st.date_input("Desde", value=pd.to_datetime("2023-01-01"), key="darvas_start")
     end   = st.date_input("Hasta", value=pd.to_datetime("today"),     key="darvas_end")
 
-    # largo variable del Darvas Box
+    # Largo variable del Darvas Box
     DARVAS_WINDOW = st.slider(
         "Largo del Darvas Box (boxp)",
         min_value=1, max_value=50, value=5, step=1, key="darvas_window"
@@ -52,27 +52,27 @@ def backtest_darvas():
         st.error("No se encontraron datos para esa configuración.")
         return
 
-    # Quitar timezone y pasar índice a columna Date
-    df.index = pd.to_datetime(df.index).tz_localize(None)
-    df_hist = df.reset_index().rename(columns={'index':'Date'})
+    st.success(f"Datos descargados: {len(df)} filas")
 
-    st.success(f"Datos descargados: {len(df_hist)} filas")
     # 4) Mostrar tabla de históricos con formato
+    df_hist = df.reset_index().rename(columns={'index': 'Date'})
+    df_hist['Date'] = pd.to_datetime(df_hist['Date']).dt.tz_localize(None)
+
     st.dataframe(
         df_hist,
         use_container_width=True,
         column_config={
-            'Date': st.column_config.DateColumn('Fecha', format='DD/MM/YYYY'),
-            'Open': st.column_config.NumberColumn('Apertura', format=',.2f'),
-            'High': st.column_config.NumberColumn('Máximo', format=',.2f'),
-            'Low': st.column_config.NumberColumn('Mínimo', format=',.2f'),
-            'Close': st.column_config.NumberColumn('Cierre', format=',.2f'),
-            'Volume': st.column_config.NumberColumn('Volumen', format=','),
+            'Date'  : st.column_config.DateColumn("Fecha", format="DD/MM/YYYY"),
+            'Open'  : st.column_config.NumberColumn("Apertura", format="%,.2f"),
+            'High'  : st.column_config.NumberColumn("Máximo",   format="%,.2f"),
+            'Low'   : st.column_config.NumberColumn("Mínimo",   format="%,.2f"),
+            'Close' : st.column_config.NumberColumn("Cierre",   format="%,.2f"),
+            'Volume': st.column_config.NumberColumn("Volumen",  format="%,.0f"),
         }
     )
 
-    # 5) Normalizar y limpiar para cálculo de indicadores
-    df = df_hist.dropna(subset=["Close", "High", "Low"]).copy()
+    # 5) Normalizar y limpiar
+    df = df.reset_index(drop=False).dropna(subset=["Close", "High", "Low"])
 
     # 6) Cálculo Darvas Box
     df['darvas_high']      = df['High'].rolling(window=DARVAS_WINDOW, min_periods=DARVAS_WINDOW).max()
@@ -81,11 +81,11 @@ def backtest_darvas():
     df['prev_darvas_low']  = df['darvas_low'].shift(1)
     df['prev_close']       = df['Close'].shift(1)
 
-    # 7) Señales Darvas (ruptura de una vez)
+    # 7) Señales Darvas
     df['buy_signal']  = (df['Close'] > df['prev_darvas_high']) & (df['prev_close'] <= df['prev_darvas_high'])
     df['sell_signal'] = (df['Close'] < df['prev_darvas_low'])  & (df['prev_close'] >= df['prev_darvas_low'])
 
-    # 8) Filtro de tendencia con MavilimW (dos barras atrás)
+    # 8) Filtro de tendencia con MavilimW
     df['mavilimw']    = calc_mavilimw(df)
     df['trend_up']    = df['Close'] > df['mavilimw'].shift(2)
     df['trend_down']  = df['Close'] < df['mavilimw'].shift(2)
@@ -97,6 +97,7 @@ def backtest_darvas():
                  slowLength=SLOW_EMA,
                  channelLength=CHANNEL_LEN,
                  mult=BB_MULT)
+    # Momentum bajista adicional
     fastMA     = df['Close'].ewm(span=FAST_EMA, adjust=False).mean()
     slowMA     = df['Close'].ewm(span=SLOW_EMA, adjust=False).mean()
     macd       = fastMA - slowMA
@@ -111,14 +112,12 @@ def backtest_darvas():
     df['buy_final']  = df['buy_signal']  & df['trend_up']   & df['wae_filter_buy']
     df['sell_final'] = df['sell_signal'] & df['trend_down'] & df['wae_filter_sell']
 
-    # 11) Extraer y formatear señales
-    cols = [
-        'Date', 'Close', 'darvas_high', 'darvas_low', 'mavilimw',
-        'wae_trendUp', 'wae_e1', 'wae_deadzone', 'wae_trendDown',
-        'buy_signal', 'trend_up', 'wae_filter_buy', 'buy_final',
-        'sell_signal', 'trend_down', 'wae_filter_sell', 'sell_final'
-    ]
-    df_signals = df.loc[df['buy_final'] | df['sell_final'], cols].copy()
+    # 11) Preparamos df_signals con formato
+    df_signals = (
+        df.loc[df['buy_final'] | df['sell_final']]
+          .reset_index(drop=True)
+          .rename(columns={'index': 'Date'})
+    )
     df_signals['Date'] = pd.to_datetime(df_signals['Date']).dt.tz_localize(None)
 
     st.success(f"Número de señales detectadas: {len(df_signals)}")
@@ -126,15 +125,17 @@ def backtest_darvas():
         df_signals,
         use_container_width=True,
         column_config={
-            'Date': st.column_config.DateColumn('Fecha', format='DD/MM/YYYY'),
-            'Close': st.column_config.NumberColumn('Cierre', format=',.2f'),
-            'darvas_high': st.column_config.NumberColumn('Darvas High', format=',.2f'),
-            'darvas_low': st.column_config.NumberColumn('Darvas Low', format=',.2f'),
-            'mavilimw': st.column_config.NumberColumn('MavilimW', format=',.2f'),
-            'wae_trendUp': st.column_config.NumberColumn('WAE↑', format=',.2f'),
-            'wae_e1': st.column_config.NumberColumn('Explosion', format=',.2f'),
-            'wae_deadzone': st.column_config.NumberColumn('DeadZone', format=',.2f'),
-            'wae_trendDown': st.column_config.NumberColumn('WAE↓', format=',.2f'),
+            'Date'           : st.column_config.DateColumn("Fecha",      format="DD/MM/YYYY"),
+            'Close'          : st.column_config.NumberColumn("Cierre",     format="%,.2f"),
+            'darvas_high'    : st.column_config.NumberColumn("Darvas High",format="%,.2f"),
+            'darvas_low'     : st.column_config.NumberColumn("Darvas Low", format="%,.2f"),
+            'mavilimw'       : st.column_config.NumberColumn("MavilimW",   format="%,.2f"),
+            'wae_trendUp'    : st.column_config.NumberColumn("WAE↑",       format="%,.2f"),
+            'wae_e1'         : st.column_config.NumberColumn("Explosion",  format="%,.2f"),
+            'wae_deadzone'   : st.column_config.NumberColumn("DeadZone",   format="%,.2f"),
+            'wae_trendDown'  : st.column_config.NumberColumn("WAE↓",       format="%,.2f"),
+            'buy_signal'     : st.column_config.BooleanColumn("Buy Signal"),
+            'sell_signal'    : st.column_config.BooleanColumn("Sell Signal"),
         }
     )
 
