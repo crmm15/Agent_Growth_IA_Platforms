@@ -130,15 +130,8 @@ def backtest_darvas():
             'wae_trendUp':      st.column_config.NumberColumn('WAE↑',       format=',.2f'),
             'wae_e1':           st.column_config.NumberColumn('Explosión',  format=',.2f'),
             'wae_deadzone':     st.column_config.NumberColumn('DeadZone',   format=',.2f'),
-            'wae_trendDown':    st.column_config.NumberColumn('WAE↓',       format=',.2f'),
-            'buy_signal':       st.column_config.BooleanColumn('Buysignal'),
-            'trend_up':         st.column_config.BooleanColumn('Trend↑'),
-            'wae_filter_buy':   st.column_config.BooleanColumn('WAEfilter↑'),
-            'buy_final':        st.column_config.BooleanColumn('BuyFinal'),
-            'sell_signal':      st.column_config.BooleanColumn('SellSignal'),
-            'trend_down':       st.column_config.BooleanColumn('Trend↓'),
-            'wae_filter_sell':  st.column_config.BooleanColumn('WAEfilter↓'),
-            'sell_final':       st.column_config.BooleanColumn('SellFinal'),
+            'wae_trendDown':    st.column_config.NumberColumn('WAE↓',       format=',.2f')
+            # NO BooleanColumn aquí
         }
     )
 
@@ -165,7 +158,7 @@ def backtest_darvas():
     plt.xticks(rotation=20)
     st.pyplot(fig)
 
-    # 12) Explicación de señales
+    # 8) Explicación de señales
     with st.expander("ℹ️ Interpretación de las señales"):
         st.markdown("""  
         - 🔼 **Señal de compra**: se genera cuando el precio cierra por encima de la Darvas High del día anterior, la tendencia (MavilimW) es alcista y la fuerza (WAE) supera el umbral.  
@@ -174,7 +167,7 @@ def backtest_darvas():
         - 📊 **Cantidad de señales**: compras y ventas detectadas en el periodo seleccionado.
         """)
 
-    # 13) Perfil del backtest
+    # 9) Perfil del backtest
     with st.expander("📈 Perfil del Backtest"):
         # calculamos algunos KPIs básicos
         total_ops = len(df_signals)
@@ -187,4 +180,3 @@ def backtest_darvas():
         - ⏳ **Periodo analizado**: {start.strftime('%d/%m/%Y')} a {end.strftime('%d/%m/%Y')}  
         - ⚙️ **Parámetros**: Darvas Window = {DARVAS_WINDOW}, EMA rápida = {FAST_EMA}, EMA lenta = {SLOW_EMA}
         """)
-
