@@ -15,7 +15,7 @@ Esta aplicación combina inteligencia artificial, análisis cuantitativo y simul
 
 ## ⚙️ Archivos clave
 
-- `plataforma_gpt_inversiones.py`: archivo principal de la app (corre en Streamlit)
+- `app.py`: archivo principal de la app (corre en Streamlit)
 - `requirements.txt`: dependencias para correr en la nube
 - `registro_acciones.csv`: log de decisiones tomadas (se genera automáticamente)
 
@@ -24,4 +24,4 @@ Esta aplicación combina inteligencia artificial, análisis cuantitativo y simul
 ### Localmente
 ```bash
 pip install -r requirements.txt
-streamlit run plataforma_gpt_inversiones.py
+streamlit run app.py
