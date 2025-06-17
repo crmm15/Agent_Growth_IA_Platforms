@@ -12,7 +12,10 @@ Esta aplicación combina inteligencia artificial, análisis cuantitativo y simul
   Analiza decisiones pasadas con visualizaciones de rentabilidad por ticker y acción tomada.
 
 - 📈 **Backtesting Darvas que nos presenta esta estrategia**
-  Realiza un backtesting de la estrategia de Darvas 
+  Realiza un backtesting de la estrategia de Darvas
+  
+- 📊 **Top Volumen 30d**
+  Lista tickers cuyo volumen aumentó 50% o más en los últimos 30 días
 
 ## ⚙️ Archivos clave
 
