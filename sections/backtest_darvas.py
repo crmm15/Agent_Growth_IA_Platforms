@@ -119,19 +119,23 @@ def backtest_darvas():
     )
 
      # Señales finales: primera señal tras lateralidad o cambio de tendencia
-    df_calc['trend_state'] = np.select(
-        [df_calc['trend_up'], df_calc['trend_down']],
-        [1, -1],
-        default=0
-    )
-    df_calc['prev_state'] = df_calc['trend_state'].shift(1).fillna(0)
     df_calc['buy_final'] = (
-        df_calc['buy_signal'] & df_calc['trend_up'] & df_calc['wae_filter_buy'] &
-        (df_calc['prev_state'] != 1)
+        df_calc['buy_signal']
+        & df_calc['trend_up']
+        & df_calc['wae_filter_buy']
+        & (
+            (~df_calc['trend_up'].shift(1) & ~df_calc['trend_down'].shift(1))
+            | df_calc['trend_down'].shift(1)
+        )
     )
     df_calc['sell_final'] = (
-        df_calc['sell_signal'] & df_calc['trend_down'] & df_calc['wae_filter_sell'] &
-        (df_calc['prev_state'] != -1)
+        df_calc['sell_signal']
+        & df_calc['trend_down']
+        & df_calc['wae_filter_sell']
+        & (
+            (~df_calc['trend_up'].shift(1) & ~df_calc['trend_down'].shift(1))
+            | df_calc['trend_up'].shift(1)
+        )
     )
 
     # 6) Preparo tabla de señales
@@ -214,7 +218,7 @@ def backtest_darvas():
         - ⚙️ **Parámetros**: Darvas Window = {DARVAS_WINDOW}, EMA rápida = {FAST_EMA}, EMA lenta = {SLOW_EMA}
         """)
 
-    # métricas de rentabilidad y riesgo
+     # métricas de rentabilidad y riesgo
     if len(df_calc) > 1:
         df_calc["ret"] = df_calc["Close"].pct_change().fillna(0)
         df_calc["signal"] = np.where(df_calc["buy_final"], 1,
