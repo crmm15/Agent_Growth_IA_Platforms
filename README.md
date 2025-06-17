@@ -26,3 +26,4 @@ Esta aplicación combina inteligencia artificial, análisis cuantitativo y simul
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
+```
