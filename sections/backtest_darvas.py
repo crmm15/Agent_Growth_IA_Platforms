@@ -194,3 +194,22 @@ def backtest_darvas():
         - ⏳ **Periodo analizado**: {start.strftime('%d/%m/%Y')} a {end.strftime('%d/%m/%Y')}  
         - ⚙️ **Parámetros**: Darvas Window = {DARVAS_WINDOW}, EMA rápida = {FAST_EMA}, EMA lenta = {SLOW_EMA}
         """)
+
+    # métricas de rentabilidad y riesgo
+    if len(df_calc) > 1:
+        df_calc["ret"] = df_calc["Close"].pct_change().fillna(0)
+        df_calc["signal"] = np.where(df_calc["buy_final"], 1,
+                                     np.where(df_calc["sell_final"], 0, np.nan))
+        df_calc["position"] = df_calc["signal"].ffill().fillna(0)
+        df_calc["strategy_ret"] = df_calc["position"].shift(1) * df_calc["ret"]
+        df_calc["equity"] = (1 + df_calc["strategy_ret"]).cumprod()
+        total_ret = df_calc["equity"].iloc[-1] - 1
+        max_dd = (df_calc["equity"] / df_calc["equity"].cummax() - 1).min()
+        factor = {"1d": 252, "1h": 24*252, "15m": 96*252, "5m": 288*252}.get(timeframe, 252)
+        sharpe = 0.0
+        if df_calc["strategy_ret"].std() != 0:
+            sharpe = (df_calc["strategy_ret"].mean() / df_calc["strategy_ret"].std()) * np.sqrt(factor)
+
+        st.markdown(f"- 💰 **Rentabilidad acumulada**: {total_ret:.2%}")
+        st.markdown(f"- 📉 **Máx Drawdown**: {max_dd:.2%}")
+        st.markdown(f"- ⚖️ **Sharpe ratio**: {sharpe:.2f}")
