@@ -210,6 +210,19 @@ def backtest_darvas():
         if df_calc["strategy_ret"].std() != 0:
             sharpe = (df_calc["strategy_ret"].mean() / df_calc["strategy_ret"].std()) * np.sqrt(factor)
 
-        st.markdown(f"- 💰 **Rentabilidad acumulada**: {total_ret:.2%}")
-        st.markdown(f"- 📉 **Máx Drawdown**: {max_dd:.2%}")
-        st.markdown(f"- ⚖️ **Sharpe ratio**: {sharpe:.2f}")
+        col1, col2, col3 = st.columns(3)
+        col1.metric(
+            "💰 Rentabilidad acumulada",
+            f"{total_ret:.2%}",
+            help="Ganancia total obtenida siguiendo todas las señales"
+        )
+        col2.metric(
+            "📉 Máx Drawdown",
+            f"{max_dd:.2%}",
+            help="Caída porcentual más pronunciada desde un máximo"
+        )
+        col3.metric(
+            "⚖️ Sharpe ratio",
+            f"{sharpe:.2f}",
+            help="Rentabilidad ajustada por volatilidad"
+        )
