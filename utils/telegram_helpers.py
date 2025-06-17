@@ -1,4 +1,8 @@
 import requests
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+import datetime
 from streamlit import secrets
 
 def send_telegram_message(text: str):
@@ -6,14 +10,7 @@ def send_telegram_message(text: str):
     requests.post(
         f'https://api.telegram.org/bot{token}/sendMessage',
         data={'chat_id': chat, 'text': text, 'parse_mode': 'Markdown'}
-    )
-
-import os
-import pandas as pd
-import matplotlib.pyplot as plt
-import datetime
-import requests
-from streamlit import secrets
+)
 
 def generar_y_enviar_resumen_telegram():
     log = "registro_acciones.csv"
