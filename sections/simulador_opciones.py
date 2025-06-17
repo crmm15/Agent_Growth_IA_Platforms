@@ -68,6 +68,10 @@ def simulador_opciones():
 
     ticker_yf = yf.Ticker(selected_ticker)
     expiraciones = ticker_yf.options
+    
+    if not expiraciones:
+        st.warning("⚠️ No se encontraron expiraciones disponibles para este ticker.")
+        return
 
     if expiraciones:
         fecha_venc = min(
@@ -81,8 +85,11 @@ def simulador_opciones():
 
         if tabla_opciones.empty:
             st.warning("⚠ No hay opciones válidas para ese strike.")
+            return
         else:
-            fila = tabla_opciones.loc[np.abs(tabla_opciones["strike"] - strike_price).idxmin()]
+            fila = tabla_opciones.loc[
+                np.abs(tabla_opciones["strike"] - strike_price).idxmin()
+            ]
             premium = (fila["bid"] + fila["ask"]) / 2
 
         st.markdown(f"**Precio actual:** ${precio_actual:.2f}")
