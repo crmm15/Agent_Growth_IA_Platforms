@@ -30,7 +30,6 @@ def gestor_portfolio():
     for _, row in df.iterrows():
         ticker = row["Ticker"]
         rentab = row.get("Rentabilidad", np.nan)
-        dca     = row.get("DCA", np.nan)
 
         st.markdown(f"### ▶ {ticker}: " +
                     (f"{rentab*100:.2f}%" if pd.notna(rentab) else "—"))
