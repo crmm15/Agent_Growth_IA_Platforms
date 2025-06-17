@@ -111,9 +111,32 @@ def backtest_darvas():
     df_calc['wae_filter_buy']  = (df_calc['wae_trendUp']   > df_calc['wae_e1']) & (df_calc['wae_trendUp']   > df_calc['wae_deadzone'])
     df_calc['wae_filter_sell'] = (df_calc['wae_trendDown'] > df_calc['wae_e1']) & (df_calc['wae_trendDown'] > df_calc['wae_deadzone'])
 
-    # Señales finales
-    df_calc['buy_final']  = df_calc['buy_signal']  & df_calc['trend_up']   & df_calc['wae_filter_buy']
-    df_calc['sell_final'] = df_calc['sell_signal'] & df_calc['trend_down'] & df_calc['wae_filter_sell']
+   # Estado de tendencia: 1 alcista, -1 bajista, 0 lateral
+    df_calc['trend_state'] = np.select(
+        [df_calc['trend_up'], df_calc['trend_down']],
+        [1, -1],
+        default=0
+    )
+
+    # Señales finales: solo la primera tras lateral o cambio de tendencia
+    df_calc['buy_final'] = False
+    df_calc['sell_final'] = False
+    buy_ready = False
+    sell_ready = False
+    prev_state = 0
+    for i, row in df_calc.iterrows():
+        curr_state = row['trend_state']
+        if curr_state == 1 and prev_state <= 0:
+            buy_ready = True
+        if curr_state == -1 and prev_state >= 0:
+            sell_ready = True
+        if buy_ready and row['buy_signal'] and row['wae_filter_buy']:
+            df_calc.at[i, 'buy_final'] = True
+            buy_ready = False
+        if sell_ready and row['sell_signal'] and row['wae_filter_sell']:
+            df_calc.at[i, 'sell_final'] = True
+            sell_ready = False
+        prev_state = curr_state
 
     # 6) Preparo tabla de señales
     cols = [
