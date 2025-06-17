@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import datetime
 from streamlit import secrets
+from config import ARCHIVO_LOG
 
 def send_telegram_message(text: str):
     token, chat = secrets['TELEGRAM_TOKEN'], secrets['TELEGRAM_CHAT_ID']
@@ -13,7 +14,7 @@ def send_telegram_message(text: str):
 )
 
 def generar_y_enviar_resumen_telegram():
-    log = "registro_acciones.csv"
+    log = ARCHIVO_LOG
     if not os.path.exists(log): return
     df = pd.read_csv(log)
     resumen = df['Acción Tomada'].value_counts()
