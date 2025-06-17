@@ -5,12 +5,7 @@ Esta app integra tres módulos:
 - 📊 **Gestor de Portafolio** con recomendaciones accionables.
 - 📈 **Simulador de Opciones** adaptado a tu perfil de riesgo.
 - 📋 **Dashboard de Desempeño** que aprende de tus decisiones.
-
----
-
-## 🧭 Prompt Estratégico de Inversión (Versión 1.0)
-
-> "Buscamos activos de calidad superior, con alto ROE/ROIC, crecimiento sostenible en EPS, expansión del margen operativo, bajo apalancamiento y señales positivas en el comportamiento de insiders. Defendemos ganancias con puts selectivos, priorizamos probabilidades implícitas vía delta, y operamos bajo principios de preservación del capital y riesgo controlado."
+- 📈 **Backtesting Darvas** que nos presenta esta estrategia.
 
 ---
 
