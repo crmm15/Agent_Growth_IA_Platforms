@@ -11,6 +11,9 @@ Esta aplicación combina inteligencia artificial, análisis cuantitativo y simul
 - 📉 **Dashboard de desempeño histórico**  
   Analiza decisiones pasadas con visualizaciones de rentabilidad por ticker y acción tomada.
 
+- 📈 **Backtesting Darvas que nos presenta esta estrategia**
+  Realiza un backtesting de la estrategia de Darvas 
+
 ## ⚙️ Archivos clave
 
 - `app.py`: archivo principal de la app (corre en Streamlit)
