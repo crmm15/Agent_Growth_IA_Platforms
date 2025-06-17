@@ -4,6 +4,7 @@ from sections.gestor_portfolio  import gestor_portfolio
 from sections.simulador_opciones import simulador_opciones
 from sections.dashboard        import dashboard
 from sections.backtest_darvas  import backtest_darvas
+from sections.top_volume       import top_volume
 
 st.set_page_config(page_title="Agent GrowthIA M&M", layout="wide")
 
@@ -22,7 +23,8 @@ seccion = st.sidebar.radio(
         "Gestor de Portafolio",
         "Simulador de Opciones",
         "Dashboard de Desempeño",
-        "Backtesting Darvas"
+        "Backtesting Darvas",
+        "Top Volumen"
     ]
 )
 # ——— Rutina principal ———————————————————————————————————————
@@ -39,6 +41,9 @@ elif seccion == "Simulador de Opciones":
 elif seccion == "Dashboard de Desempeño":
     dashboard()
 
-else:  # Backtesting Darvas
+elif seccion == "Backtesting Darvas":
     backtest_darvas()
+    
+else:  # Top Volumen
+    top_volume()
 
