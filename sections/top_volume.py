@@ -22,7 +22,7 @@ def top_volume():
     start_curr = end - timedelta(days=7)
 
     seleccionables = []
-    for tk in tickers:
+        for tk in tickers:
         df = yf.download(
             tk,
             start=start_prev.strftime("%Y-%m-%d"),
@@ -31,12 +31,19 @@ def top_volume():
         )
         if df.empty:
             continue
+        # Si el DataFrame tiene MultiIndex en columnas, lo "aplanamos"
         if isinstance(df.columns, pd.MultiIndex):
-            df.columns = df.columns.get_level_values(0)
+            if "Volume" in df.columns.get_level_values(0):
+                df.columns = df.columns.get_level_values(-1)
+            else:
+                continue
+        # Ahora revisamos que 'Volume' exista y sea Serie
         if "Volume" not in df.columns:
             continue
-        df.index = pd.to_datetime(df.index).tz_localize(None)
-        df["Volume"] = pd.to_numeric(df["Volume"], errors="coerce")
+        volume_col = df["Volume"]
+        if not isinstance(volume_col, pd.Series):
+            continue
+        df["Volume"] = pd.to_numeric(volume_col, errors="coerce")
         vol_prev = df.loc[df.index < start_curr, "Volume"].mean()
         vol_curr = df.loc[df.index >= start_curr, "Volume"].mean()
         if (
@@ -46,13 +53,3 @@ def top_volume():
             and vol_curr >= 1.5 * vol_prev
         ):
             seleccionables.append(tk)
-
-    if not seleccionables:
-        st.warning("No se encontraron tickers con ese criterio.")
-        return
-
-    elegido = st.selectbox(
-        "Seleccioná un ticker destacado por volumen",
-        seleccionables,
-    )
-    st.success(f"Ticker elegido: {elegido}")
