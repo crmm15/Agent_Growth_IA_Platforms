@@ -15,7 +15,7 @@ def top_volume():
         "GOOGL", "META", "MSTR", "JPM", "SPY"
     ]
     st.caption(
-        "Buscando acciones con aumento de volumen ≥ 50% "+
+        "Buscando acciones con aumento de volumen ≥ 30% "+
         "comparado con los 30 días previos"
     )
 
