@@ -1,4 +1,6 @@
 # sections/top_volume.py
+"""Módulo que muestra tickers con un fuerte incremento de volumen."""
+
 import streamlit as st
 import pandas as pd
 import yfinance as yf
@@ -29,12 +31,17 @@ def top_volume():
             end=end.strftime("%Y-%m-%d"),
             progress=False,
         )
-        if df.empty or "Volume" not in df.columns:
+        if df.empty:
+            continue
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
+        if "Volume" not in df.columns:
             continue
         df.index = pd.to_datetime(df.index).tz_localize(None)
+        df["Volume"] = pd.to_numeric(df["Volume"], errors="coerce")
         vol_prev = df.loc[df.index < start_curr, "Volume"].mean()
         vol_curr = df.loc[df.index >= start_curr, "Volume"].mean()
-        if pd.notna(vol_prev) and vol_prev > 0 and vol_curr >= 1.5 * vol_prev:
+        if pd.notna(vol_prev) and pd.notna(vol_curr) and vol_prev > 0 and vol_curr >= 1.5 * vol_prev:
             seleccionables.append(tk)
 
     if not seleccionables:
