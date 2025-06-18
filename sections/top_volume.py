@@ -14,9 +14,7 @@ def _cargar_tickers_sp500() -> list[str]:
     """
 
     url = "https://datahub.io/core/s-and-p-500-companies/r/constituents.csv"
-    local_file = (
-        Path(__file__).resolve().parent.parent / "data" / "sp500_constituents.csv"
-    )
+    local_file = Path(__file__).resolve().parent.parent / "data" / "sp500_constituents.csv"
 
     try:
         df_sp = pd.read_csv(url)
@@ -27,7 +25,6 @@ def _cargar_tickers_sp500() -> list[str]:
             raise
 
     return df_sp["Symbol"].tolist()
-
 
 def top_volume():
     st.header("📊  Tickers S&P 500 con Volumen 7d > Percentil (previos)")
@@ -81,10 +78,7 @@ def top_volume():
 
             # Si el DataFrame tiene MultiIndex en columnas, aplanamos
             if isinstance(df.columns, pd.MultiIndex):
-                df.columns = [
-                    "_".join(col).strip() if isinstance(col, tuple) else col
-                    for col in df.columns.values
-                ]
+                df.columns = ['_'.join(col).strip() if isinstance(col, tuple) else col for col in df.columns.values]
             # Normaliza nombres de columnas
             cols_norm = [str(col).strip().lower() for col in df.columns]
             if "volume" not in cols_norm:
@@ -111,16 +105,12 @@ def top_volume():
 
             if pd.notna(media_7d) and pd.notna(percentil) and percentil > 0:
                 seleccionables.append(tk)
-                resultados.append(
-                    {
-                        "Ticker": tk,
-                        "Vol_7d": int(media_7d),
-                        "Percentil_prev": int(percentil),
-                        "Ratio": round(media_7d / percentil, 2)
-                        if percentil > 0
-                        else None,
-                    }
-                )
+                resultados.append({
+                    "Ticker": tk,
+                    "Vol_7d": int(media_7d),
+                    "Percentil_prev": int(percentil),
+                    "Ratio": round(media_7d / percentil, 2) if percentil > 0 else None
+                })
         except Exception:
             continue
 
@@ -146,7 +136,6 @@ def top_volume():
         seleccionables,
     )
     st.success(f"Ticker elegido: {elegido}")
-
 
 if __name__ == "__main__":
     top_volume()
