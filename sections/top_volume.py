@@ -4,7 +4,7 @@ import yfinance as yf
 from datetime import datetime, timedelta
 
 def top_volume():
-    st.header("📊 Tickers S&P 500 con Volumen 7d por Encima del Percentil 75 (30d previos)")
+    st.header("📊  Tickers S&P 500 con Volumen 7d > Percentil 75 (30 Días)")
 
     # 1. Leer tickers S&P 500 desde un CSV público
     try:
@@ -53,7 +53,7 @@ def top_volume():
             if vol_30d.empty or vol_7d.empty:
                 continue
 
-            percentil_75 = vol_30d.quantile(0.75)
+            percentil_75 = vol_30d.quantile(0.4)
             media_7d = vol_7d.mean()
 
             if pd.notna(media_7d) and pd.notna(percentil_75) and media_7d > percentil_75:
