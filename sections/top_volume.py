@@ -24,6 +24,7 @@ def top_volume():
     seleccionables = []
     resultados = []
 
+    tickers = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA", "META", "AMZN"]
     for tk in tickers:
         try:
             df = yf.download(
@@ -58,11 +59,12 @@ def top_volume():
             if len(vol_prev) < 7 or vol_7d.empty:
                 continue
 
-            percentil = vol_prev.quantile(0.2)   # Cambia aquí el percentil según tu preferencia
+            percentil = vol_prev.quantile(0.0)   # Cambia aquí el percentil según tu preferencia
             media_7d = vol_7d.mean()
 
             st.write(f"{tk}: Vol_7d={media_7d:.0f}, Percentil={percentil:.0f}, VolPrevLen={len(vol_prev)}")
-            if pd.notna(media_7d) and pd.notna(percentil) and media_7d > percentil:
+            #if pd.notna(media_7d) and pd.notna(percentil) and media_7d > percentil:
+            if pd.notna(media_7d) and pd.notna(percentil):
                 seleccionables.append(tk)
                 resultados.append({
                     "Ticker": tk,
