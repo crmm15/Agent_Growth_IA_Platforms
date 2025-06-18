@@ -4,22 +4,27 @@ import yfinance as yf
 from datetime import datetime, timedelta
 
 def top_volume():
-    st.header("🛠️ DEBUG: Chequeo de Descarga y Cálculo de Volumen S&P500")
+    st.header("📊  Tickers S&P 500 con Volumen 7d > Percentil (previos)")
 
-    # Para debug: fuerza una fila para chequear visualización
-    resultados = [{
-        "Ticker": "TEST",
-        "Vol_7d": 1,
-        "Percentil_prev": 1,
-        "Ratio": 1
-    }]
+    # 1. Leer tickers S&P 500 desde un CSV público
+    try:
+        url = "https://datahub.io/core/s-and-p-500-companies/r/constituents.csv"
+        df_sp = pd.read_csv(url)
+        tickers = df_sp['Symbol'].tolist()
+    except Exception as e:
+        st.error(f"No se pudo obtener la lista del S&P500: {e}")
+        return
 
-    # Solo para pruebas, tickers grandes:
-    tickers = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA", "META", "AMZN"]
+    st.caption(f"Analizando {len(tickers)} tickers S&P500: volumen promedio últimos 7 días hábiles vs. percentil de días previos")
 
+    # 2. Fechas para analizar (descargar suficiente historia)
     end = datetime.today()
-    start = end - timedelta(days=60)
+    start = end - timedelta(days=60)   # Bajamos 2 meses por seguridad
 
+    seleccionables = []
+    resultados = []
+
+    tickers = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA", "META", "AMZN"]
     for tk in tickers:
         try:
             df = yf.download(
@@ -28,56 +33,60 @@ def top_volume():
                 end=end.strftime("%Y-%m-%d"),
                 progress=False,
             )
-            st.write(f"{tk} - Cantidad de días descargados: {len(df)}")
             if df.empty:
-                st.write(f"{tk}: DataFrame vacío")
                 continue
 
             # Si el DataFrame tiene MultiIndex en columnas, aplanamos
             if isinstance(df.columns, pd.MultiIndex):
                 df.columns = ['_'.join(col).strip() if isinstance(col, tuple) else col for col in df.columns.values]
-
+            # Normaliza nombres de columnas
             cols_norm = [str(col).strip().lower() for col in df.columns]
             if "volume" not in cols_norm:
-                st.write(f"{tk}: No se encontró columna 'Volume'. Columnas: {df.columns.tolist()}")
                 continue
-
             vol_col_name = df.columns[cols_norm.index("volume")]
             df["Volume"] = pd.to_numeric(df[vol_col_name], errors="coerce")
             df = df.dropna(subset=["Volume"])
-            st.write(f"{tk} - Volúmenes recientes: {df['Volume'].tail(10).tolist()}")
 
-            if len(df) < 14:
-                st.write(f"{tk}: Menos de 14 días hábiles con datos")
+            # Cortes flexibles
+            if len(df) < 14:  # Necesitamos al menos 14 días para tener 7+7
                 continue
 
+            # Últimos 7 días hábiles (los más recientes)
             vol_7d = df["Volume"].iloc[-7:]
+            # Todos los días previos a esos 7 (para percentil)
             vol_prev = df["Volume"].iloc[:-7]
 
             if len(vol_prev) < 7 or vol_7d.empty:
-                st.write(f"{tk}: Insuficientes días previos para percentil")
                 continue
 
-            percentil = vol_prev.quantile(0.0)  # Debe ser el mínimo histórico
+            percentil = vol_prev.quantile(0.0)   # Cambia aquí el percentil según tu preferencia
             media_7d = vol_7d.mean()
 
             st.write(f"{tk}: Vol_7d={media_7d:.0f}, Percentil={percentil:.0f}, VolPrevLen={len(vol_prev)}")
-            resultados.append({
-                "Ticker": tk,
-                "Vol_7d": int(media_7d),
-                "Percentil_prev": int(percentil),
-                "Ratio": round(media_7d / percentil, 2) if percentil > 0 else None
-            })
+            #if pd.notna(media_7d) and pd.notna(percentil) and media_7d > percentil:
+            if pd.notna(media_7d) and pd.notna(percentil):
+                seleccionables.append(tk)
+                resultados.append({
+                    "Ticker": tk,
+                    "Vol_7d": int(media_7d),
+                    "Percentil_prev": int(percentil),
+                    "Ratio": round(media_7d / percentil, 2) if percentil > 0 else None
+                })
         except Exception as ex:
-            st.write(f"Error en {tk}: {ex}")
             continue
 
-    # Muestra la tabla aunque solo tenga la fila TEST
-    df_result = pd.DataFrame(resultados)
-    st.dataframe(df_result)
+    if not seleccionables:
+        st.warning("No se encontraron tickers con ese criterio.")
+        return
 
-    # También muestra la lista de tickers procesados
-    st.write("Tickers procesados:", [r["Ticker"] for r in resultados])
+    df_result = pd.DataFrame(resultados)
+    st.dataframe(df_result.sort_values("Ratio", ascending=False).reset_index(drop=True))
+
+    elegido = st.selectbox(
+        "Seleccioná un ticker destacado por volumen alto (vs percentil previos)",
+        seleccionables,
+    )
+    st.success(f"Ticker elegido: {elegido}")
 
 if __name__ == "__main__":
     top_volume()
