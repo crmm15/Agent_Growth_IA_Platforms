@@ -47,8 +47,15 @@ def top_volume():
             df["Volume"] = pd.to_numeric(df[vol_col_name], errors="coerce")
 
             # Selecciona períodos
-            vol_7d = df[df.index >= start_7]["Volume"]
-            vol_30d = df[(df.index < start_7) & (df.index >= start_30)]["Volume"]
+            df = df.dropna(subset=["Volume"])  # solo días con dato
+            
+            if len(df) < 37:
+                continue
+            
+            # Últimos 7 días hábiles (los más recientes)
+            vol_7d = df["Volume"].iloc[-7:]
+            # 30 días hábiles previos a esos 7
+            vol_30d = df["Volume"].iloc[-37:-7]
 
             if vol_30d.empty or vol_7d.empty:
                 continue
