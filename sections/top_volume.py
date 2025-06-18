@@ -59,7 +59,7 @@ def top_volume():
             if len(vol_prev) < 7 or vol_7d.empty:
                 continue
 
-            percentil = vol_prev.quantile(0.0)   # Cambia aquí el percentil según tu preferencia
+            percentil = vol_prev.quantile(0.2)   # Cambia aquí el percentil según tu preferencia
             media_7d = vol_7d.mean()
 
             st.write(f"{tk}: Vol_7d={media_7d:.0f}, Percentil={percentil:.0f}, VolPrevLen={len(vol_prev)}")
