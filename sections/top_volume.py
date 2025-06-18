@@ -11,7 +11,7 @@ def top_volume():
     st.header("📊 Tickers con mayor volumen 7d")
 
     tickers = [
-        "EYE", "MSFT", "TSLA", "AMZN", "NVDA",
+        "EYE", "CERO", "TSLA", "AMZN", "NVDA",
         "GOOGL", "META", "MSTR", "JPM", "SPY"
     ]
     st.caption(
