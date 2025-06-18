@@ -51,7 +51,7 @@ def top_volume():
             pd.notna(vol_prev)
             and pd.notna(vol_curr)
             and vol_prev > 0
-            and vol_curr >= 1.5 * vol_prev
+            and vol_curr >= 1.4 * vol_prev
         ):
             seleccionables.append(tk)
 
