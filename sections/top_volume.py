@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 
 def top_volume():
-    st.header("📊 Tickers con mayor volumen 30d")
+    st.header("📊 Tickers con mayor volumen 7d")
 
     tickers = [
         "AAPL", "MSFT", "TSLA", "AMZN", "NVDA",
@@ -16,12 +16,12 @@ def top_volume():
     ]
     st.caption(
         "Buscando acciones con aumento de volumen ≥ 50% "+
-        "comparado con los 30 días previos"
+        "comparado con los 7 días previos"
     )
 
     end = datetime.today()
-    start_prev = end - timedelta(days=60)
-    start_curr = end - timedelta(days=30)
+    start_prev = end - timedelta(days=14)
+    start_curr = end - timedelta(days=7)
 
     seleccionables = []
     for tk in tickers:
@@ -41,7 +41,12 @@ def top_volume():
         df["Volume"] = pd.to_numeric(df["Volume"], errors="coerce")
         vol_prev = df.loc[df.index < start_curr, "Volume"].mean()
         vol_curr = df.loc[df.index >= start_curr, "Volume"].mean()
-        if pd.notna(vol_prev) and pd.notna(vol_curr) and vol_prev > 0 and vol_curr >= 1.2 * vol_prev:
+        if (
+            pd.notna(vol_prev)
+            and pd.notna(vol_curr)
+            and vol_prev > 0
+            and vol_curr >= 1.5 * vol_prev
+        ):
             seleccionables.append(tk)
 
     if not seleccionables:
