@@ -56,6 +56,7 @@ def top_volume():
             percentil_75 = vol_30d.quantile(0.4)
             media_7d = vol_7d.mean()
 
+            st.write(f"{tk}: Vol_7d={media_7d}, Percentil={percentil_75}")
             if pd.notna(media_7d) and pd.notna(percentil_75) and media_7d > percentil_75:
                 seleccionables.append(tk)
                 resultados.append({
