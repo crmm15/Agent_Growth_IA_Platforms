@@ -53,7 +53,7 @@ def top_volume():
             if vol_30d.empty or vol_7d.empty:
                 continue
 
-            percentil_75 = vol_30d.quantile(0.3)
+            percentil_75 = vol_30d.quantile(0.2)
             media_7d = vol_7d.mean()
 
             st.write(f"{tk}: Vol_7d={media_7d}, Percentil={percentil_75}")
