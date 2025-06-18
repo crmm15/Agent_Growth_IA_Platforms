@@ -12,7 +12,7 @@ def top_volume():
 
     tickers = [
         "AAPL", "MSFT", "TSLA", "AMZN", "NVDA",
-        "GOOGL", "META", "BRK-B", "JPM", "SPY"
+        "GOOGL", "META", "MSTR", "JPM", "SPY"
     ]
     st.caption(
         "Buscando acciones con aumento de volumen ≥ 50% "+
