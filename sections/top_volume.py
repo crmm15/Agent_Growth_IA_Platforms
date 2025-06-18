@@ -3,29 +3,53 @@ import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
 
+@st.cache_data(show_spinner=False)
+def _cargar_tickers_sp500() -> list[str]:
+    """Devuelve la lista de símbolos del S&P 500 desde un CSV público."""
+    url = "https://datahub.io/core/s-and-p-500-companies/r/constituents.csv"
+    df_sp = pd.read_csv(url)
+    return df_sp["Symbol"].tolist()
+
+
 def top_volume():
     st.header("📊  Tickers S&P 500 con Volumen 7d > Percentil (previos)")
 
-    # 1. Leer tickers S&P 500 desde un CSV público
+    # 1. Parámetros de usuario
+    percentil_sel = st.slider(
+        "Percentil histórico de comparación",
+        min_value=0.0,
+        max_value=1.0,
+        value=0.2,
+        step=0.05,
+    )
+    dias_hist = st.slider(
+        "Días de historial a descargar",
+        min_value=30,
+        max_value=180,
+        value=60,
+        step=10,
+    )
+
+    # 2. Leer tickers S&P 500 (con caché)
     try:
-        url = "https://datahub.io/core/s-and-p-500-companies/r/constituents.csv"
-        df_sp = pd.read_csv(url)
-        tickers = df_sp['Symbol'].tolist()
+         tickers = _cargar_tickers_sp500()
     except Exception as e:
         st.error(f"No se pudo obtener la lista del S&P500: {e}")
         return
 
-    st.caption(f"Analizando {len(tickers)} tickers S&P500: volumen promedio últimos 7 días hábiles vs. percentil de días previos")
+     st.caption(
+        f"Analizando {len(tickers)} tickers S&P500: volumen promedio últimos 7 días hábiles vs. percentil de días previos"
+    )
 
-    # 2. Fechas para analizar (descargar suficiente historia)
+     # 3. Fechas para analizar (descargar suficiente historia)
     end = datetime.today()
-    start = end - timedelta(days=60)   # Bajamos 2 meses por seguridad
+    start = end - timedelta(days=dias_hist)
 
     seleccionables = []
     resultados = []
 
-    tickers = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA", "META", "AMZN"]
-    for tk in tickers:
+    progreso = st.progress(0.0)
+    for idx, tk in enumerate(tickers):
         try:
             df = yf.download(
                 tk,
@@ -59,12 +83,10 @@ def top_volume():
             if len(vol_prev) < 7 or vol_7d.empty:
                 continue
 
-            percentil = vol_prev.quantile(0.2)   # Cambia aquí el percentil según tu preferencia
+            percentil = vol_prev.quantile(percentil_sel)
             media_7d = vol_7d.mean()
 
-            st.write(f"{tk}: Vol_7d={media_7d:.0f}, Percentil={percentil:.0f}, VolPrevLen={len(vol_prev)}")
-            #if pd.notna(media_7d) and pd.notna(percentil) and media_7d > percentil:
-            if pd.notna(media_7d) and pd.notna(percentil):
+            if pd.notna(media_7d) and pd.notna(percentil) and percentil > 0:
                 seleccionables.append(tk)
                 resultados.append({
                     "Ticker": tk,
@@ -72,8 +94,10 @@ def top_volume():
                     "Percentil_prev": int(percentil),
                     "Ratio": round(media_7d / percentil, 2) if percentil > 0 else None
                 })
-        except Exception as ex:
+        except Exception:
             continue
+
+    progreso.progress((idx + 1) / len(tickers))
 
     if not seleccionables:
         st.warning("No se encontraron tickers con ese criterio.")
