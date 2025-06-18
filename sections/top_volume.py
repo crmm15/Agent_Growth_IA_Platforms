@@ -2,14 +2,29 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
+from pathlib import Path
+
 
 @st.cache_data(show_spinner=False)
 def _cargar_tickers_sp500() -> list[str]:
-    """Devuelve la lista de símbolos del S&P 500 desde un CSV público."""
-    url = "https://datahub.io/core/s-and-p-500-companies/r/constituents.csv"
-    df_sp = pd.read_csv(url)
-    return df_sp["Symbol"].tolist()
+    """Devuelve la lista de símbolos del S&P 500.
 
+    Intenta descargar el CSV público y, si falla, recurre a un archivo
+    local con un subconjunto de tickers para funcionar sin conexión.
+    """
+
+    url = "https://datahub.io/core/s-and-p-500-companies/r/constituents.csv"
+    local_file = Path(__file__).resolve().parent.parent / "data" / "sp500_constituents.csv"
+
+    try:
+        df_sp = pd.read_csv(url)
+    except Exception:
+        if local_file.exists():
+            df_sp = pd.read_csv(local_file)
+        else:
+            raise
+
+    return df_sp["Symbol"].tolist()
 
 def top_volume():
     st.header("📊  Tickers S&P 500 con Volumen 7d > Percentil (previos)")
@@ -32,16 +47,16 @@ def top_volume():
 
     # 2. Leer tickers S&P 500 (con caché)
     try:
-         tickers = _cargar_tickers_sp500()
+        tickers = _cargar_tickers_sp500()
     except Exception as e:
         st.error(f"No se pudo obtener la lista del S&P500: {e}")
         return
 
-     st.caption(
+    st.caption(
         f"Analizando {len(tickers)} tickers S&P500: volumen promedio últimos 7 días hábiles vs. percentil de días previos"
     )
 
-     # 3. Fechas para analizar (descargar suficiente historia)
+    # 3. Fechas para analizar (descargar suficiente historia)
     end = datetime.today()
     start = end - timedelta(days=dias_hist)
 
@@ -97,7 +112,7 @@ def top_volume():
         except Exception:
             continue
 
-    progreso.progress((idx + 1) / len(tickers))
+        progreso.progress((idx + 1) / len(tickers))
 
     if not seleccionables:
         st.warning("No se encontraron tickers con ese criterio.")
