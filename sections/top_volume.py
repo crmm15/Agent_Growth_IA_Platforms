@@ -10,10 +10,10 @@ from datetime import datetime, timedelta
 def top_volume():
     st.header("📊 Tickers con mayor volumen 7d")
 
-    tickers = [
-        "EYE", "CERO", "TSLA", "AMZN", "NVDA",
-        "GOOGL", "META", "MSTR", "JPM", "SPY"
-    ]
+    url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
+    df = pd.read_html(url, header=0)[0]
+    tickers = df['Symbol'].tolist()
+    
     st.caption(
         "Buscando acciones con aumento de volumen ≥ 50% "+
         "comparado con los 7 días previos"
