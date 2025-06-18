@@ -53,4 +53,38 @@ def top_volume():
             # Últimos 7 días hábiles (los más recientes)
             vol_7d = df["Volume"].iloc[-7:]
             # Todos los días previos a esos 7 (para percentil)
-            vol_p_
+            vol_prev = df["Volume"].iloc[:-7]
+
+            if len(vol_prev) < 7 or vol_7d.empty:
+                continue
+
+            percentil = vol_prev.quantile(0.2)   # Cambia aquí el percentil según tu preferencia
+            media_7d = vol_7d.mean()
+
+            st.write(f"{tk}: Vol_7d={media_7d:.0f}, Percentil={percentil:.0f}, VolPrevLen={len(vol_prev)}")
+            if pd.notna(media_7d) and pd.notna(percentil) and media_7d > percentil:
+                seleccionables.append(tk)
+                resultados.append({
+                    "Ticker": tk,
+                    "Vol_7d": int(media_7d),
+                    "Percentil_prev": int(percentil),
+                    "Ratio": round(media_7d / percentil, 2) if percentil > 0 else None
+                })
+        except Exception as ex:
+            continue
+
+    if not seleccionables:
+        st.warning("No se encontraron tickers con ese criterio.")
+        return
+
+    df_result = pd.DataFrame(resultados)
+    st.dataframe(df_result.sort_values("Ratio", ascending=False).reset_index(drop=True))
+
+    elegido = st.selectbox(
+        "Seleccioná un ticker destacado por volumen alto (vs percentil previos)",
+        seleccionables,
+    )
+    st.success(f"Ticker elegido: {elegido}")
+
+if __name__ == "__main__":
+    top_volume()
