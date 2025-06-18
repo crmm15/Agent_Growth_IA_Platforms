@@ -6,16 +6,16 @@ from datetime import datetime, timedelta
 def top_volume():
     st.header("📊 Tickers con mayor volumen 7d")
 
-    # — Obtener la lista de tickers del S&P 500 —
+    # Leer tickers S&P 500 desde un CSV público (¡no requiere lxml!)
     try:
-        url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
-        df_sp = pd.read_html(url, header=0)[0]
-        tickers = df_sp['Symbol'].str.replace(r'\.', '-', regex=True).tolist()
+        url = "https://datahub.io/core/s-and-p-500-companies/r/constituents.csv"
+        df_sp = pd.read_csv(url)
+        tickers = df_sp['Symbol'].tolist()
     except Exception as e:
         st.error(f"No se pudo obtener la lista del S&P500: {e}")
         return
 
-    st.caption(f"Analizando {len(tickers)} tickers S&P500 con aumento de volumen ≥ 50% vs 7 d previos")
+    st.caption(f"Analizando {len(tickers)} tickers S&P500 con aumento de volumen ≥ 50% vs 7 días previos")
 
     end = datetime.today()
     start_prev = end - timedelta(days=14)
