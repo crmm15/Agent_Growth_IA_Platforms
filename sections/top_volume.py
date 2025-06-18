@@ -1,23 +1,21 @@
-# sections/top_volume.py
-"""Módulo que muestra tickers con un fuerte incremento de volumen."""
-
 import streamlit as st
 import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
 
-
 def top_volume():
     st.header("📊 Tickers con mayor volumen 7d")
 
-    url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
-    df = pd.read_html(url, header=0)[0]
-    tickers = df['Symbol'].tolist()
-    
-    st.caption(
-        "Buscando acciones con aumento de volumen ≥ 50% "+
-        "comparado con los 7 días previos"
-    )
+    # — Obtener la lista de tickers del S&P 500 —
+    try:
+        url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
+        df_sp = pd.read_html(url, header=0)[0]
+        tickers = df_sp['Symbol'].str.replace(r'\.', '-', regex=True).tolist()
+    except Exception as e:
+        st.error(f"No se pudo obtener la lista del S&P500: {e}")
+        return
+
+    st.caption(f"Analizando {len(tickers)} tickers S&P500 con aumento de volumen ≥ 50% vs 7 d previos")
 
     end = datetime.today()
     start_prev = end - timedelta(days=14)
@@ -45,7 +43,7 @@ def top_volume():
             pd.notna(vol_prev)
             and pd.notna(vol_curr)
             and vol_prev > 0
-            and vol_curr >= 1.1 * vol_prev
+            and vol_curr >= 1.5 * vol_prev
         ):
             seleccionables.append(tk)
 
