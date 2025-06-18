@@ -5,3 +5,4 @@ yfinance
 matplotlib
 openpyxl
 scipy>=1.10.0
+requests
