@@ -27,41 +27,46 @@ def top_volume():
     resultados = []
 
     for tk in tickers:
-        df = yf.download(
-            tk,
-            start=start_37.strftime("%Y-%m-%d"),
-            end=end.strftime("%Y-%m-%d"),
-            progress=False,
-        )
-        if df.empty or "Volume" not in df.columns:
-            continue
-        # Desenrolla MultiIndex si hace falta
-        if isinstance(df.columns, pd.MultiIndex):
-            if "Volume" in df.columns.get_level_values(0):
-                df.columns = df.columns.get_level_values(-1)
-            else:
+        try:
+            df = yf.download(
+                tk,
+                start=start_37.strftime("%Y-%m-%d"),
+                end=end.strftime("%Y-%m-%d"),
+                progress=False,
+            )
+            if df.empty:
+                continue
+            # Si el DataFrame tiene MultiIndex en columnas, aplanamos
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = ['_'.join(col).strip() if isinstance(col, tuple) else col for col in df.columns.values]
+            # Normaliza nombres de columnas
+            cols_norm = [str(col).strip().lower() for col in df.columns]
+            if "volume" not in cols_norm:
+                continue
+            vol_col_name = df.columns[cols_norm.index("volume")]
+            df["Volume"] = pd.to_numeric(df[vol_col_name], errors="coerce")
+
+            # Selecciona períodos
+            vol_7d = df[df.index >= start_7]["Volume"]
+            vol_30d = df[(df.index < start_7) & (df.index >= start_30)]["Volume"]
+
+            if vol_30d.empty or vol_7d.empty:
                 continue
 
-        df["Volume"] = pd.to_numeric(df["Volume"], errors="coerce")
+            percentil_75 = vol_30d.quantile(0.75)
+            media_7d = vol_7d.mean()
 
-        # Volúmenes a comparar
-        vol_7d = df[df.index >= start_7]["Volume"]
-        vol_30d = df[(df.index < start_7) & (df.index >= start_30)]["Volume"]
-
-        if vol_30d.empty or vol_7d.empty:
+            if pd.notna(media_7d) and pd.notna(percentil_75) and media_7d > percentil_75:
+                seleccionables.append(tk)
+                resultados.append({
+                    "Ticker": tk,
+                    "Vol_7d": int(media_7d),
+                    "P75_vol_30d": int(percentil_75),
+                    "Ratio": round(media_7d / percentil_75, 2) if percentil_75 > 0 else None
+                })
+        except Exception as ex:
+            # Si algún ticker falla, lo saltamos silenciosamente
             continue
-
-        percentil_75 = vol_30d.quantile(0.75)
-        media_7d = vol_7d.mean()
-
-        if pd.notna(media_7d) and pd.notna(percentil_75) and media_7d > percentil_75:
-            seleccionables.append(tk)
-            resultados.append({
-                "Ticker": tk,
-                "Vol_7d": int(media_7d),
-                "P75_vol_30d": int(percentil_75),
-                "Ratio": round(media_7d / percentil_75, 2) if percentil_75 > 0 else None
-            })
 
     if not seleccionables:
         st.warning("No se encontraron tickers con ese criterio.")
@@ -75,3 +80,7 @@ def top_volume():
         seleccionables,
     )
     st.success(f"Ticker elegido: {elegido}")
+
+# Si quieres que se ejecute directamente (por ejemplo, para pruebas locales):
+if __name__ == "__main__":
+    top_volume()
