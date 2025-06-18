@@ -15,7 +15,7 @@ def top_volume():
         "GOOGL", "META", "MSTR", "JPM", "SPY"
     ]
     st.caption(
-        "Buscando acciones con aumento de volumen ≥ 10% "+
+        "Buscando acciones con aumento de volumen ≥ 50% "+
         "comparado con los 30 días previos"
     )
 
@@ -41,7 +41,7 @@ def top_volume():
         df["Volume"] = pd.to_numeric(df["Volume"], errors="coerce")
         vol_prev = df.loc[df.index < start_curr, "Volume"].mean()
         vol_curr = df.loc[df.index >= start_curr, "Volume"].mean()
-        if pd.notna(vol_prev) and pd.notna(vol_curr) and vol_prev > 0 and vol_curr >= 1.5 * vol_prev:
+        if pd.notna(vol_prev) and pd.notna(vol_curr) and vol_prev > 0 and vol_curr >= 1.2 * vol_prev:
             seleccionables.append(tk)
 
     if not seleccionables:
