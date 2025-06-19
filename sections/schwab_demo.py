@@ -25,3 +25,9 @@ def schwab_demo():
 
     # Botón para ver posiciones (si ya se obtuvo account_id)
     if "account_id" in st.session_state:
+        if st.button("Ver posiciones"):
+            try:
+                positions = api.get_positions(st.session_state["account_id"])
+                st.json(positions)
+            except Exception as e:
+                st.error(f"Error al consultar: {e}")
