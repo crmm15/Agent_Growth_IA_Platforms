@@ -63,8 +63,10 @@ class SchwabAPI:
         return {"Authorization": f"Bearer {self.access_token}"}
 
     def get_accounts(self):
-        url = f"{SCHWAB_BASE_URL}/v1/accounts"
+        url = f"{SCHWAB_BASE_URL}/trader/v1/accounts"
         resp = requests.get(url, headers=self._headers())
+        print("Status code:", resp.status_code)    # Para debug rápido
+        print("Response text:", resp.text)
         resp.raise_for_status()
         return resp.json()
 
