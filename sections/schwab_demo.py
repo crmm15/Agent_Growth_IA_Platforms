@@ -12,12 +12,14 @@ def schwab_demo():
             st.success("Cuentas cargadas")
             st.json(cuentas)
 
-            # Extrae el primer accountNumber (por si lo necesitas después)
+            # Extrae y muestra posiciones del primer account
             if cuentas and isinstance(cuentas, list):
                 acc = cuentas[0]
                 sa = acc.get("securitiesAccount", {})
                 account_id = sa.get("accountNumber")
                 st.session_state["account_id"] = account_id
+
+                # Aquí obtienes las posiciones desde la respuesta de cuentas
                 positions = sa.get("positions")
                 if positions:
                     st.subheader("Tus posiciones")
