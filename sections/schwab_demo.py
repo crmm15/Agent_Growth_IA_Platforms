@@ -11,6 +11,12 @@ def schwab_demo():
             cuentas = api.get_accounts()
             st.success("Cuentas cargadas")
             st.json(cuentas)
+            if cuentas and isinstance(cuentas, list):
+                acc = cuentas[0]
+                sa = acc.get("securitiesAccount", {})
+                st.write("Claves disponibles en securitiesAccount:", list(sa.keys()))
+                st.write("Contenido securitiesAccount:", sa)
+
 
             # Extrae y muestra posiciones del primer account
             if cuentas and isinstance(cuentas, list):
