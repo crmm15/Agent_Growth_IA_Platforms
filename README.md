@@ -25,6 +25,7 @@ Esta aplicación combina inteligencia artificial, análisis cuantitativo y simul
 - `app.py`: archivo principal de la app (corre en Streamlit)
 - `requirements.txt`: dependencias para correr en la nube
 - `registro_acciones.csv`: log de decisiones tomadas (se genera automáticamente)
+- `refresh_token.txt`: se crea al autenticarse con Schwab y almacena el refresh token de forma local
 
 ## ▶️ ¿Cómo correrlo?
 
@@ -42,6 +43,8 @@ pytest
 
 Para usar la integración con Schwab deberás definir `CLIENT_ID`,
 `CLIENT_SECRET` y `REFRESH_TOKEN` en tus secretos de Streamlit o en tus variables de entorno.
+
+El `refresh_token` obtenido se guarda en el archivo `refresh_token.txt` en la raíz del proyecto. Este archivo se crea automáticamente con permisos `600` para que solo el usuario actual pueda leerlo y escribirlo.
 
 Si falta cualquiera de estas credenciales la aplicación lanzará
 `RuntimeError("Missing Schwab API credentials")` antes de intentar conectarse.
