@@ -6,28 +6,23 @@ def schwab_demo():
 
     api = SchwabAPI()
 
-    # Botón para obtener cuentas
-    if st.button("Obtener cuentas"):
+    if st.button("Obtener cuentas y posiciones"):
         try:
             cuentas = api.get_accounts()
             st.success("Cuentas cargadas")
             st.json(cuentas)
-            # Extrae el accountNumber
+
+            # Extrae el primer accountNumber (por si lo necesitas después)
             if cuentas and isinstance(cuentas, list):
                 acc = cuentas[0]
-                if "securitiesAccount" in acc and "accountNumber" in acc["securitiesAccount"]:
-                    account_id = acc["securitiesAccount"]["accountNumber"]
-                    st.session_state["account_id"] = account_id
+                sa = acc.get("securitiesAccount", {})
+                account_id = sa.get("accountNumber")
+                st.session_state["account_id"] = account_id
+                positions = sa.get("positions")
+                if positions:
+                    st.subheader("Tus posiciones")
+                    st.json(positions)
                 else:
-                    st.warning("No se encontró 'accountNumber' en la respuesta.")
+                    st.info("No se encontraron posiciones en la cuenta.")
         except Exception as e:
             st.error(f"Error al consultar: {e}")
-
-    # Botón para ver posiciones (si ya se obtuvo account_id)
-    if "account_id" in st.session_state:
-        if st.button("Ver posiciones"):
-            try:
-                positions = api.get_positions(st.session_state["account_id"])
-                st.json(positions)
-            except Exception as e:
-                st.error(f"Error al consultar: {e}")
