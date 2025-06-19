@@ -17,6 +17,9 @@ Esta aplicación combina inteligencia artificial, análisis cuantitativo y simul
 - 📊 **Top Volumen 30d**
   Lista tickers cuyo volumen aumentó 50% o más en los últimos 30 días
 
+- 🔗 **Conexión Schwab**
+  Prueba la API oficial para consultar tus cuentas
+
 ## ⚙️ Archivos clave
 
 - `app.py`: archivo principal de la app (corre en Streamlit)
@@ -30,3 +33,7 @@ Esta aplicación combina inteligencia artificial, análisis cuantitativo y simul
 pip install -r requirements.txt
 streamlit run app.py
 ```
+
+Para usar la integración con Schwab deberás definir en tus secretos o
+variables de entorno `SCHWAB_APP_KEY`, `SCHWAB_APP_SECRET` y
+`SCHWAB_REFRESH_TOKEN`.
