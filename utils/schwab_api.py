@@ -2,7 +2,7 @@ import os
 import requests
 from streamlit import secrets
 
-SCHWAB_BASE_URL = "https://api.schwabapi.com"
+SCHWAB_BASE_URL = "https://api.schwabapi.com/v1/oauth/token"
 CLIENT_ID = secrets.get("CLIENT_ID") or os.getenv("CLIENT_ID")
 CLIENT_SECRET = secrets.get("CLIENT_SECRET") or os.getenv("CLIENT_SECRET")
 REFRESH_TOKEN = secrets.get("REFRESH_TOKEN") or os.getenv("REFRESH_TOKEN")
