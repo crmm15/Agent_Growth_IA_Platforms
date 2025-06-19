@@ -5,6 +5,7 @@ from sections.simulador_opciones import simulador_opciones
 from sections.dashboard        import dashboard
 from sections.backtest_darvas  import backtest_darvas
 from sections.top_volume       import top_volume
+from sections.schwab_demo      import schwab_demo
 
 st.set_page_config(page_title="Agent GrowthIA M&M", layout="wide")
 
@@ -24,7 +25,8 @@ seccion = st.sidebar.radio(
         "Simulador de Opciones",
         "Dashboard de Desempeño",
         "Backtesting Darvas",
-        "Top Volumen"
+        "Top Volumen",
+        "Schwab API Test"
     ]
 )
 # ——— Rutina principal ———————————————————————————————————————
@@ -44,6 +46,9 @@ elif seccion == "Dashboard de Desempeño":
 elif seccion == "Backtesting Darvas":
     backtest_darvas()
     
-else:  # Top Volumen
+elif seccion == "Top Volumen":
     top_volume()
+
+else:  # Schwab API Test
+    schwab_demo()
 
