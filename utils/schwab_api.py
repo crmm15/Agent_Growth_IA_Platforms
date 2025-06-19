@@ -11,8 +11,14 @@ class SchwabAPI:
     """Pequeño cliente para la API de Schwab."""
     def __init__(self):
         self.access_token = None
-
+    
+    def _verify_credentials(self):
+        """Ensure required credentials are present."""
+        if not (CLIENT_ID and CLIENT_SECRET and REFRESH_TOKEN):
+            raise RuntimeError("Missing Schwab API credentials")
+    
     def authenticate(self):
+        self._verify_credentials()
         url = f"{SCHWAB_BASE_URL}/v1/oauth/token"
         payload = {
             "grant_type": "refresh_token",
