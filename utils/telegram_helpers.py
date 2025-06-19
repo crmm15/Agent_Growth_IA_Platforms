@@ -15,10 +15,16 @@ def send_telegram_message(text: str):
     if token is None or chat is None:
         logger.warning("Telegram secrets missing; message not sent")
         return
-    requests.post(
+    response = requests.post(
          f"https://api.telegram.org/bot{token}/sendMessage",
         data={"chat_id": chat, "text": text, "parse_mode": "Markdown"},
     )
+    if response.status_code != 200:
+        logger.warning(
+            "Failed to send Telegram message: %s - %s",
+            response.status_code,
+            response.text,
+        )
 
 def generar_y_enviar_resumen_telegram():
     log = ARCHIVO_LOG
@@ -39,11 +45,23 @@ def generar_y_enviar_resumen_telegram():
         os.remove(fname)
         return
     with open(fname, "rb") as img:
-        requests.post(
+        response = requests.post(
             f"https://api.telegram.org/bot{token}/sendPhoto",
             data={"chat_id": chat},
             files={"photo": img},
         )
+        if response.status_code != 200:
+            logger.warning(
+                "Failed to send Telegram summary: %s - %s",
+                response.status_code,
+                response.text,
+            )
+            if response.status_code != 200:
+                logger.warning(
+                    "Failed to send simulation graph: %s - %s",
+                    response.status_code,
+                    response.text,
+                )
     os.remove(fname)
 
 
@@ -58,7 +76,7 @@ def enviar_grafico_simulacion_telegram(fig, ticker):
         os.remove(fname)
         return
     with open(fname, "rb") as img:
-        requests.post(
+        response = requests.post(
             f"https://api.telegram.org/bot{token}/sendPhoto",
             data={"chat_id": chat, "caption": f"Simulación {ticker}"},
             files={"photo": img},
