@@ -45,3 +45,7 @@ variables de entorno `SCHWAB_APP_KEY`, `SCHWAB_APP_SECRET` y
 `SCHWAB_REFRESH_TOKEN`.
 Si falta cualquiera de estas credenciales la aplicación lanzará
 `RuntimeError("Missing Schwab API credentials")` antes de intentar conectarse.
+
+## Licencia
+
+Este proyecto está bajo la licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
