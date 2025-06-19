@@ -3,9 +3,9 @@ import requests
 from streamlit import secrets
 
 SCHWAB_BASE_URL = "https://api.schwabapi.com"
-CLIENT_ID = secrets.get("SCHWAB_APP_KEY") or os.getenv("SCHWAB_APP_KEY")
-CLIENT_SECRET = secrets.get("SCHWAB_APP_SECRET") or os.getenv("SCHWAB_APP_SECRET")
-REFRESH_TOKEN = secrets.get("SCHWAB_REFRESH_TOKEN") or os.getenv("SCHWAB_REFRESH_TOKEN")
+CLIENT_ID = secrets.get("CLIENT_ID") or os.getenv("CLIENT_ID")
+CLIENT_SECRET = secrets.get("CLIENT_SECRET") or os.getenv("CLIENT_SECRET")
+REFRESH_TOKEN = secrets.get("REFRESH_TOKEN") or os.getenv("REFRESH_TOKEN")
 
 class SchwabAPI:
     """Pequeño cliente para la API de Schwab."""
