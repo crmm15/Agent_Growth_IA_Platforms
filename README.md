@@ -40,9 +40,9 @@ pip install -r requirements.dev.txt
 pytest
 ```
 
-Para usar la integración con Schwab deberás definir en tus secretos o
-variables de entorno `SCHWAB_APP_KEY`, `SCHWAB_APP_SECRET` y
-`SCHWAB_REFRESH_TOKEN`.
+Para usar la integración con Schwab deberás definir `CLIENT_ID`,
+`CLIENT_SECRET` y `REFRESH_TOKEN` en tus secretos de Streamlit o en tus variables de entorno.
+
 Si falta cualquiera de estas credenciales la aplicación lanzará
 `RuntimeError("Missing Schwab API credentials")` antes de intentar conectarse.
 
