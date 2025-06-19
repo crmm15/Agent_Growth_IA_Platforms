@@ -22,13 +22,23 @@ class SchwabAPI:
         payload = {
             "grant_type": "refresh_token",
             "refresh_token": REFRESH_TOKEN,
-            "redirect_uri": "https://agentgrowthia.streamlit.app/"  # Debe coincidir con el de tu app Schwab
+            "redirect_uri": "https://agentgrowthia.streamlit.app/"
         }
-        # Auth por header, NO en el body
+        # DEBUG: Verifica que no se envía client_id/client_secret en body
+        print("Payload:", payload)
+        # Prepara request para inspeccionar headers (opcional)
+        req = requests.Request(
+            "POST",
+            url,
+            data=payload,
+            auth=HTTPBasicAuth(CLIENT_ID, CLIENT_SECRET)
+        ).prepare()
+        print("Headers:", req.headers)  # <-- Aquí verás el header Authorization con 'Basic ...'
+    
         resp = requests.post(
             url,
             data=payload,
-            auth=HTTPBasicAuth(CLIENT_ID, CLIENT_SECRET)  # <-- Importante
+            auth=HTTPBasicAuth(CLIENT_ID, CLIENT_SECRET)
         )
         resp.raise_for_status()
         self.access_token = resp.json().get("access_token")
