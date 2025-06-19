@@ -13,6 +13,7 @@ def save_refresh_token(token: str, filename="refresh_token.txt"):
     """Guarda el refresh token en un archivo seguro."""
     with open(filename, "w") as f:
         f.write(token)
+    os.chmod(filename, 0o600)
     print(f"[INFO] Nuevo refresh_token guardado en {filename}")
 
 def load_refresh_token(filename="refresh_token.txt"):
