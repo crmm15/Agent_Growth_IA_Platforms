@@ -3,3 +3,4 @@ __pycache__/
 .DS_Store
 registro_acciones.csv
 .streamlit/
+refresh_token.txt
