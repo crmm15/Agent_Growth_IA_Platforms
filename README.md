@@ -34,6 +34,12 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
+### Ejecutar pruebas
+```bash
+pip install -r requirements.dev.txt
+pytest
+```
+
 Para usar la integración con Schwab deberás definir en tus secretos o
 variables de entorno `SCHWAB_APP_KEY`, `SCHWAB_APP_SECRET` y
 `SCHWAB_REFRESH_TOKEN`.
