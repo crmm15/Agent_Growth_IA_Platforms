@@ -71,8 +71,10 @@ class SchwabAPI:
         return resp.json()
 
     def get_positions(self, account_id: str):
-        url = f"{SCHWAB_BASE_URL}/v1/accounts/{account_id}/positions"
+        url = f"{SCHWAB_BASE_URL}/trader/v1/accounts/{account_id}/positions"
         resp = requests.get(url, headers=self._headers())
+        print("Status code:", resp.status_code)    # Para debug
+        print("Response text:", resp.text)
         resp.raise_for_status()
         return resp.json()
 
