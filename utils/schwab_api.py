@@ -1,12 +1,31 @@
 import os
 import requests
 from streamlit import secrets
-from requests.auth import HTTPBasicAuth  # <-- Nuevo import
+from requests.auth import HTTPBasicAuth
 
 SCHWAB_BASE_URL = "https://api.schwabapi.com"
+
+def save_refresh_token(token: str, filename="refresh_token.txt"):
+    """Guarda el refresh token en un archivo seguro."""
+    with open(filename, "w") as f:
+        f.write(token)
+    print(f"[INFO] Nuevo refresh_token guardado en {filename}")
+
+def load_refresh_token(filename="refresh_token.txt"):
+    try:
+        with open(filename, "r") as f:
+            return f.read().strip()
+    except FileNotFoundError:
+        return None
+
+# Busca el refresh_token primero en Streamlit secrets, luego en env, luego en archivo.
+REFRESH_TOKEN = (
+    secrets.get("REFRESH_TOKEN")
+    or os.getenv("REFRESH_TOKEN")
+    or load_refresh_token()
+)
 CLIENT_ID = secrets.get("CLIENT_ID") or os.getenv("CLIENT_ID")
 CLIENT_SECRET = secrets.get("CLIENT_SECRET") or os.getenv("CLIENT_SECRET")
-REFRESH_TOKEN = secrets.get("REFRESH_TOKEN") or os.getenv("REFRESH_TOKEN")
 
 class SchwabAPI:
     def __init__(self):
@@ -24,24 +43,18 @@ class SchwabAPI:
             "refresh_token": REFRESH_TOKEN,
             "redirect_uri": "https://agentgrowthia.streamlit.app/"
         }
-        # DEBUG: Verifica que no se envía client_id/client_secret en body
-        print("Payload:", payload)
-        # Prepara request para inspeccionar headers (opcional)
-        req = requests.Request(
-            "POST",
-            url,
-            data=payload,
-            auth=HTTPBasicAuth(CLIENT_ID, CLIENT_SECRET)
-        ).prepare()
-        print("Headers:", req.headers)  # <-- Aquí verás el header Authorization con 'Basic ...'
-    
         resp = requests.post(
             url,
             data=payload,
             auth=HTTPBasicAuth(CLIENT_ID, CLIENT_SECRET)
         )
         resp.raise_for_status()
-        self.access_token = resp.json().get("access_token")
+        data = resp.json()
+        self.access_token = data.get("access_token")
+        # Si Schwab entrega un nuevo refresh_token, lo guardamos.
+        new_refresh = data.get("refresh_token")
+        if new_refresh and new_refresh != REFRESH_TOKEN:
+            save_refresh_token(new_refresh)
         return self.access_token
 
     def _headers(self):
@@ -60,3 +73,9 @@ class SchwabAPI:
         resp = requests.get(url, headers=self._headers())
         resp.raise_for_status()
         return resp.json()
+
+# --- Ejemplo de uso básico (descomenta para pruebas locales) ---
+# if __name__ == "__main__":
+#     api = SchwabAPI()
+#     accounts = api.get_accounts()
+#     print("Accounts:", accounts)
